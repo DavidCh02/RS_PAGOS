@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Pagos Realizados Hoy</h2>
+
+<h3>Pagos de Tarjetas</h3>
+<table border="1">
+    <thead>
+        <tr>
+            <th>Jugador</th>
+            <th>Categoría</th>
+            <th>Tarjetas Rojas</th>
+            <th>Tarjetas Amarillas</th>
+            <th>Valor Total</th>
+            <th>Observaciones</th>
+            <th>Método de Pago</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for pago in pagos_tarjetas %}
+        <tr>
+            <td>{{ pago.jugador }}</td>
+            <td>{{ pago.categoria }}</td>
+            <td>{{ pago.tarjetas_rojas }}</td>
+            <td>{{ pago.tarjetas_amarillas }}</td>
+            <td>${{ pago.valor_total_pagar }}</td>
+            <td>{{ pago.observaciones }}</td>
+            <td>{{ pago.metodo_pago }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h3>Pagos de Inscripciones</h3>
+<table border="1">
+    <thead>
+        <tr>
+            <th>Jugador/Equipo</th>
+            <th>Categoría</th>
+            <th>Monto a Cobrar</th>
+            <th>Observaciones</th>
+            <th>Método de Pago</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for pago in pagos_inscripciones %}
+        <tr>
+            <td>{{ pago.jugador or pago.equipo }}</td>
+            <td>{{ pago.categoria }}</td>
+            <td>${{ pago.monto_a_cobrar }}</td>
+            <td>{{ pago.observaciones }}</td>
+            <td>{{ pago.metodo_pago }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<a href="{{ url_for('pagos') }}">Volver a Pagos Pendientes</a>
+{% endblock %}
