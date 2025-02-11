@@ -96,14 +96,20 @@ def pagos():
     conn = get_db_connection()
     try:
         if request.method == 'POST':
-            # Actualizar el método de pago y estado de pago
-            id_pago = int(request.form['id_pago'])
-            tipo_pago = request.form['tipo_pago']  # 'tarjeta' o 'inscripcion'
-            metodo_pago = request.form['metodo_pago']
-            estado_pago = request.form['estado_pago']
+            # Obtener datos del formulario
+            id_pago = int(request.form.get('id_pago'))
+            tipo_pago = request.form.get('tipo_pago')  # "tarjeta" o "inscripcion"
+            metodo_pago = request.form.get('metodo_pago')
+            estado_pago = request.form.get('estado_pago')
+
+            print(f"DEBUG: id_pago={id_pago}, tipo_pago={tipo_pago}, metodo_pago={metodo_pago}, estado_pago={estado_pago}")
+
+            if not id_pago or not tipo_pago:
+                flash("Error: Falta información en el formulario.")
+                return redirect(url_for('pagos'))
 
             if tipo_pago == 'tarjeta':
-                conn.execute(text("""
+                result = conn.execute(text("""
                     UPDATE pago_tarjetas
                     SET metodo_pago = :metodo_pago, estado_pago = :estado_pago
                     WHERE id_pago = :id_pago
@@ -112,8 +118,9 @@ def pagos():
                     "metodo_pago": metodo_pago,
                     "estado_pago": estado_pago
                 })
+                print(f"DEBUG: Filas afectadas (tarjetas): {result.rowcount}")
             elif tipo_pago == 'inscripcion':
-                conn.execute(text("""
+                result = conn.execute(text("""
                     UPDATE pago_inscripcion
                     SET metodo_pago = :metodo_pago, estado_pago = :estado_pago
                     WHERE id_inscripcion = :id_pago
@@ -122,6 +129,11 @@ def pagos():
                     "metodo_pago": metodo_pago,
                     "estado_pago": estado_pago
                 })
+                print(f"DEBUG: Filas afectadas (inscripciones): {result.rowcount}")
+            else:
+                flash("Error: Tipo de pago no válido.")
+                return redirect(url_for('pagos'))
+
             conn.commit()  # Confirmar los cambios
 
         # Consultar pagos pendientes de hoy
@@ -139,7 +151,6 @@ def pagos():
         conn.close()
 
     return render_template('pagos.html', pagos_tarjetas=pagos_tarjetas, pagos_inscripciones=pagos_inscripciones)
-
 # Página para mostrar los pagos realizados hoy
 @app.route('/pagados_hoy', methods=['GET', 'POST'])
 def pagados_hoy():
