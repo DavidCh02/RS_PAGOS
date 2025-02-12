@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Pagos Realizados Hoy</h2>
+<h2>Pagos Realizados Hoy ({{ fecha_cliente }})</h2>
 
 <h3>Pagos de Tarjetas</h3>
 <table border="1">
@@ -55,4 +55,23 @@
     </tbody>
 </table>
 <a href="{{ url_for('pagos') }}">Volver a Pagos Pendientes</a>
+<form method="POST" id="pagados-hoy-form">
+    <input type="hidden" name="fecha_cliente" id="fecha-cliente">
+    <button type="submit">Mostrar Pagos de Hoy</button>
+</form>
+
+<script>
+    // Obtener la fecha actual del cliente en formato YYYY-MM-DD
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const formattedDate = `${year}-${month}-${day}`;
+
+    // Asignar la fecha al campo oculto
+    document.getElementById('fecha-cliente').value = formattedDate;
+</script>
+
+
 {% endblock %}
+

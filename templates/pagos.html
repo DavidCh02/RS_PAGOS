@@ -1,7 +1,14 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Pagos Pendientes de Hoy</h2>
+<h2>Pagos Pendientes</h2>
+
+<!-- Formulario para filtrar por fecha -->
+<form method="POST" style="margin-bottom: 20px;">
+    <label>Seleccionar Fecha:</label>
+    <input type="date" name="fecha_cliente" required>
+    <button type="submit" name="filtrar_fecha">Filtrar</button>
+</form>
 
 <h3>Pagos de Tarjetas</h3>
 <table border="1">
@@ -28,21 +35,21 @@
             <td>{{ pago.observaciones }}</td>
             <td>{{ pago.metodo_pago }}</td>
             <td>
-            <form method="POST" style="display:inline;">
-                <input type="hidden" name="id_pago" value="{{ pago.id_pago }}">
-                <input type="hidden" name="tipo_pago" value="tarjeta">
-                <label>Método:</label>
-                <select name="metodo_pago">
-                    <option value="Efectivo">Efectivo</option>
-                    <option value="Transferencia">Transferencia</option>
-                </select>
-                <label>Estado:</label>
-                <select name="estado_pago">
-                    <option value="Pendiente">Pendiente</option>
-                    <option value="Pagado">Pagado</option>
-                </select>
-                <button type="submit" name="actualizar_pago">Actualizar</button>
-            </form>
+                <form method="POST" style="display:inline;">
+                    <input type="hidden" name="id_pago" value="{{ pago.id_pago }}">
+                    <input type="hidden" name="tipo_pago" value="tarjeta">
+                    <label>Método:</label>
+                    <select name="metodo_pago">
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Transferencia">Transferencia</option>
+                    </select>
+                    <label>Estado:</label>
+                    <select name="estado_pago">
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Pagado">Pagado</option>
+                    </select>
+                    <button type="submit" name="actualizar_pago">Actualizar</button>
+                </form>
             </td>
         </tr>
         {% endfor %}
@@ -70,21 +77,21 @@
             <td>{{ pago.observaciones }}</td>
             <td>{{ pago.metodo_pago }}</td>
             <td>
-            <form method="POST" style="display:inline;">
-                <input type="hidden" name="id_pago" value="{{ pago.id_inscripcion }}">
-                <input type="hidden" name="tipo_pago" value="inscripcion">
-                <label>Método:</label>
-                <select name="metodo_pago">
-                    <option value="Efectivo">Efectivo</option>
-                    <option value="Transferencia">Transferencia</option>
-                </select>
-                <label>Estado:</label>
-                <select name="estado_pago">
-                    <option value="Pendiente">Pendiente</option>
-                    <option value="Pagado">Pagado</option>
-                </select>
-                <button type="submit" name="actualizar_pago">Actualizar</button>
-            </form>
+                <form method="POST" style="display:inline;">
+                    <input type="hidden" name="id_pago" value="{{ pago.id_inscripcion }}">
+                    <input type="hidden" name="tipo_pago" value="inscripcion">
+                    <label>Método:</label>
+                    <select name="metodo_pago">
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Transferencia">Transferencia</option>
+                    </select>
+                    <label>Estado:</label>
+                    <select name="estado_pago">
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Pagado">Pagado</option>
+                    </select>
+                    <button type="submit" name="actualizar_pago">Actualizar</button>
+                </form>
             </td>
         </tr>
         {% endfor %}
