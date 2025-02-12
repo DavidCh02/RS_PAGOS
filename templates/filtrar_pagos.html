@@ -3,13 +3,13 @@
 {% block content %}
 <h2>Filtrar Pagos por Fecha</h2>
 <form method="POST">
-    <label>Fecha:</label>
-    <input type="date" name="fecha" required><br>
+    <label>Seleccionar Fecha:</label>
+    <input type="date" name="fecha_cliente" value="{{ fecha_seleccionada }}" required>
     <button type="submit">Filtrar</button>
 </form>
 
-{% if fecha %}
-<h3>Pagos de Tarjetas para {{ fecha }}</h3>
+<!-- Pagos de Tarjetas -->
+<h3>Pagos de Tarjetas</h3>
 <table border="1">
     <thead>
         <tr>
@@ -20,26 +20,31 @@
             <th>Valor Total</th>
             <th>Observaciones</th>
             <th>Método de Pago</th>
-            <th>Estado de Pago</th>
+            <th>Fecha de Pago</th>
+            <th>Día de la Semana</th>
+            <th>Estado</th>
         </tr>
     </thead>
     <tbody>
         {% for pago in pagos_tarjetas %}
         <tr>
-            <td>{{ pago.jugador }}</td>
-            <td>{{ pago.categoria }}</td>
-            <td>{{ pago.tarjetas_rojas }}</td>
-            <td>{{ pago.tarjetas_amarillas }}</td>
-            <td>${{ pago.valor_total_pagar }}</td>
-            <td>{{ pago.observaciones }}</td>
-            <td>{{ pago.metodo_pago }}</td>
-            <td>{{ pago.estado_pago }}</td>
+            <td>{{ pago['jugador'] }}</td>
+            <td>{{ pago['categoria'] }}</td>
+            <td>{{ pago['tarjetas_rojas'] }}</td>
+            <td>{{ pago['tarjetas_amarillas'] }}</td>
+            <td>${{ pago['valor_total_pagar'] }}</td>
+            <td>{{ pago['observaciones'] }}</td>
+            <td>{{ pago['metodo_pago'] }}</td>
+            <td>{{ pago['fecha_cobro'] }}</td>
+            <td>{{ pago['dia_nombre'] }}</td>
+            <td>{{ pago['estado_pago'] }}</td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
 
-<h3>Pagos de Inscripciones para {{ fecha }}</h3>
+<!-- Pagos de Inscripciones -->
+<h3>Pagos de Inscripciones</h3>
 <table border="1">
     <thead>
         <tr>
@@ -48,21 +53,30 @@
             <th>Monto a Cobrar</th>
             <th>Observaciones</th>
             <th>Método de Pago</th>
-            <th>Estado de Pago</th>
+            <th>Fecha de Pago</th>
+            <th>Día de la Semana</th>
+            <th>Estado</th>
         </tr>
     </thead>
     <tbody>
+        {% if pagos_inscripciones %}
         {% for pago in pagos_inscripciones %}
         <tr>
-            <td>{{ pago.jugador or pago.equipo }}</td>
-            <td>{{ pago.categoria }}</td>
-            <td>${{ pago.monto_a_cobrar }}</td>
-            <td>{{ pago.observaciones }}</td>
-            <td>{{ pago.metodo_pago }}</td>
-            <td>{{ pago.estado_pago }}</td>
+            <td>{{ pago['jugador'] or pago['equipo'] }}</td>
+            <td>{{ pago['categoria'] }}</td>
+            <td>${{ pago['monto_a_cobrar'] }}</td>
+            <td>{{ pago['observaciones'] }}</td>
+            <td>{{ pago['metodo_pago'] }}</td>
+            <td>{{ pago['fecha_inscripcion'] }}</td>
+            <td>{{ pago['dia_nombre'] }}</td>
+            <td>{{ pago['estado_pago'] }}</td>
         </tr>
         {% endfor %}
+        {% else %}
+        <tr>
+            <td colspan="8">No hay pagos de inscripción para esta fecha.</td>
+        </tr>
+        {% endif %}
     </tbody>
 </table>
-{% endif %}
 {% endblock %}
