@@ -1,116 +1,317 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Pagos Pendientes</h2>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagos Pendientes</title>
+    <style>
+        /* Estilos generales */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1a1a1a; /* Negro */
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
 
-<!-- Mostrar la fecha actual -->
-<p><strong>Fecha Actual:</strong> {{ fecha_actual }}</p>
+        h2 {
+            text-align: center;
+            color: #ffd700; /* Amarillo */
+            font-size: 2rem;
+            margin-top: 20px;
+        }
 
-<!-- Mostrar pagos agrupados por día de la semana -->
-{% for dia, pagos in pagos_por_dia.items() %}
-<h3>
-    {{ dia }}
-    {% if dia == "Sábado" %}
-        <small>({{ fecha_sabado }})</small>
-    {% elif dia == "Domingo" %}
-        <small>({{ fecha_domingo }})</small>
+        p {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #ffd700; /* Amarillo */
+        }
+
+        h3 {
+            color: #ffd700; /* Amarillo */
+            margin-top: 20px;
+        }
+
+        small {
+            color: #ccc; /* Gris claro */
+        }
+
+        table {
+            width: 95%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background-color: #2a2a2a; /* Negro más claro */
+            color: #fff;
+            font-size: 14px;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #ffd700; /* Amarillo */
+        }
+
+        th {
+            background-color: #ffd700; /* Amarillo */
+            color: #000; /* Negro */
+        }
+
+        tr:nth-child(even) {
+            background-color: #3a3a3a; /* Negro más claro */
+        }
+
+        form {
+            display: inline;
+        }
+
+        select {
+            padding: 5px;
+            margin-right: 5px;
+            border: 1px solid #ffd700; /* Amarillo */
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 5px 10px;
+            background-color: #ffd700; /* Amarillo */
+            color: #000; /* Negro */
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #e6b800; /* Amarillo más oscuro */
+        }
+
+        .logo {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .logo img {
+            width: 100px;
+            height: auto;
+        }
+
+        .imagen-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .imagen-container img {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid #ffd700; /* Amarillo */
+            border-radius: 10px;
+        }
+
+        a {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #ffd700; /* Amarillo */
+            text-decoration: none;
+            font-size: 1.2rem;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Diseño responsivo */
+        @media (max-width: 768px) {
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            p {
+                font-size: 1rem;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 8px;
+            }
+
+            button {
+                font-size: 12px;
+                padding: 4px 8px;
+            }
+
+            .logo img {
+                width: 80px;
+            }
+
+            .imagen-container img {
+                max-width: 90%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h2 {
+                font-size: 1.2rem;
+            }
+
+            p {
+                font-size: 0.9rem;
+            }
+
+            table {
+                font-size: 10px;
+            }
+
+            th, td {
+                padding: 6px;
+            }
+
+            button {
+                font-size: 10px;
+                padding: 3px 6px;
+            }
+
+            .logo img {
+                width: 60px;
+            }
+
+            .imagen-container img {
+                max-width: 80%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Logo de la empresa -->
+    <div class="logo">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Football_%28soccer_ball%29.svg/1200px-Football_%28soccer_ball%29.svg.png" alt="Logo Balón de Oro">
+    </div>
+
+    <!-- Contenido principal -->
+    <h2>Pagos Pendientes</h2>
+    <p><strong>Fecha Actual:</strong> {{ fecha_actual }}</p>
+
+    <!-- Mostrar pagos agrupados por día de la semana -->
+    {% for dia, pagos in pagos_por_dia.items() %}
+    <h3>
+        {{ dia }}
+        {% if dia == "Sábado" %}
+            <small>({{ fecha_sabado }})</small>
+        {% elif dia == "Domingo" %}
+            <small>({{ fecha_domingo }})</small>
+        {% endif %}
+    </h3>
+
+    <!-- Pagos de Tarjetas -->
+    {% if pagos.tarjetas %}
+    <h4>Pagos de Tarjetas</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Jugador</th>
+                <th>Categoría</th>
+                <th>Tarjetas Rojas</th>
+                <th>Tarjetas Amarillas</th>
+                <th>Valor Total</th>
+                <th>Observaciones</th>
+                <th>Método de Pago</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for pago in pagos.tarjetas %}
+            <tr>
+                <td>{{ pago.jugador }}</td>
+                <td>{{ pago.categoria }}</td>
+                <td>{{ pago.tarjetas_rojas }}</td>
+                <td>{{ pago.tarjetas_amarillas }}</td>
+                <td>${{ pago.valor_total_pagar }}</td>
+                <td>{{ pago.observaciones }}</td>
+                <td>{{ pago.metodo_pago }}</td>
+                <td>
+                    <form method="POST" style="display:inline;">
+                        <input type="hidden" name="id_pago" value="{{ pago.id_pago }}">
+                        <input type="hidden" name="tipo_pago" value="tarjeta">
+                        <label>Método:</label>
+                        <select name="metodo_pago">
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Transferencia">Transferencia</option>
+                        </select>
+                        <label>Estado:</label>
+                        <select name="estado_pago">
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="Pagado">Pagado</option>
+                        </select>
+                        <button type="submit" name="actualizar_pago">Actualizar</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
     {% endif %}
-</h3>
 
-<!-- Pagos de Tarjetas -->
-{% if pagos.tarjetas %}
-<h4>Pagos de Tarjetas</h4>
-<table border="1">
-    <thead>
-        <tr>
-            <th>Jugador</th>
-            <th>Categoría</th>
-            <th>Tarjetas Rojas</th>
-            <th>Tarjetas Amarillas</th>
-            <th>Valor Total</th>
-            <th>Observaciones</th>
-            <th>Método de Pago</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for pago in pagos.tarjetas %}
-        <tr>
-            <td>{{ pago.jugador }}</td>
-            <td>{{ pago.categoria }}</td>
-            <td>{{ pago.tarjetas_rojas }}</td>
-            <td>{{ pago.tarjetas_amarillas }}</td>
-            <td>${{ pago.valor_total_pagar }}</td>
-            <td>{{ pago.observaciones }}</td>
-            <td>{{ pago.metodo_pago }}</td>
-            <td>
-            <form method="POST" style="display:inline;">
-                <input type="hidden" name="id_pago" value="{{ pago.id_pago }}">
-                <input type="hidden" name="tipo_pago" value="tarjeta">
-                <label>Método:</label>
-                <select name="metodo_pago">
-                    <option value="Efectivo">Efectivo</option>
-                    <option value="Transferencia">Transferencia</option>
-                </select>
-                <label>Estado:</label>
-                <select name="estado_pago">
-                    <option value="Pendiente">Pendiente</option>
-                    <option value="Pagado">Pagado</option>
-                </select>
-                <button type="submit" name="actualizar_pago">Actualizar</button>
-            </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% endif %}
+    <!-- Pagos de Inscripciones -->
+    {% if pagos.inscripciones %}
+    <h4>Pagos de Inscripciones</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Jugador/Equipo</th>
+                <th>Categoría</th>
+                <th>Monto a Cobrar</th>
+                <th>Observaciones</th>
+                <th>Método de Pago</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for pago in pagos.inscripciones %}
+            <tr>
+                <td>{{ pago.jugador or pago.equipo }}</td>
+                <td>{{ pago.categoria }}</td>
+                <td>${{ pago.monto_a_cobrar }}</td>
+                <td>{{ pago.observaciones }}</td>
+                <td>{{ pago.metodo_pago }}</td>
+                <td>
+                    <form method="POST" style="display:inline;">
+                        <input type="hidden" name="id_pago" value="{{ pago.id_inscripcion }}">
+                        <input type="hidden" name="tipo_pago" value="inscripcion">
+                        <label>Método:</label>
+                        <select name="metodo_pago">
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Transferencia">Transferencia</option>
+                        </select>
+                        <label>Estado:</label>
+                        <select name="estado_pago">
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="Pagado">Pagado</option>
+                        </select>
+                        <button type="submit" name="actualizar_pago">Actualizar</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+    {% endfor %}
 
-<!-- Pagos de Inscripciones -->
-{% if pagos.inscripciones %}
-<h4>Pagos de Inscripciones</h4>
-<table border="1">
-    <thead>
-        <tr>
-            <th>Jugador/Equipo</th>
-            <th>Categoría</th>
-            <th>Monto a Cobrar</th>
-            <th>Observaciones</th>
-            <th>Método de Pago</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for pago in pagos.inscripciones %}
-        <tr>
-            <td>{{ pago.jugador or pago.equipo }}</td>
-            <td>{{ pago.categoria }}</td>
-            <td>${{ pago.monto_a_cobrar }}</td>
-            <td>{{ pago.observaciones }}</td>
-            <td>{{ pago.metodo_pago }}</td>
-            <td>
-                <form method="POST" style="display:inline;">
-                    <input type="hidden" name="id_pago" value="{{ pago.id_inscripcion }}"> <!-- Corregido aquí -->
-                    <input type="hidden" name="tipo_pago" value="inscripcion"> <!-- Corregido aquí -->
-                    <label>Método:</label>
-                    <select name="metodo_pago">
-                        <option value="Efectivo">Efectivo</option>
-                        <option value="Transferencia">Transferencia</option>
-                    </select>
-                    <label>Estado:</label>
-                    <select name="estado_pago">
-                        <option value="Pendiente">Pendiente</option>
-                        <option value="Pagado">Pagado</option>
-                    </select>
-                    <button type="submit" name="actualizar_pago">Actualizar</button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% endif %}
-{% endfor %}
+    <!-- Enlace a pagos realizados esta semana -->
+    <a href="{{ url_for('pagados_hoy') }}">Ver Pagos Realizados Esta Semana</a>
 
-<a href="{{ url_for('pagados_hoy') }}">Ver Pagos Realizados Esta semana</a>
+    <!-- Espacio para imágenes -->
+    <div class="imagen-container">
+        <img src="https://via.placeholder.com/800x400" alt="Imagen de ejemplo">
+    </div>
+</body>
+</html>
 {% endblock %}
