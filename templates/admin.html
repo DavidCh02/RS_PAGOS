@@ -1,55 +1,132 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Agregar Pago de Tarjetas</h2>
-<form method="POST">
-    <input type="hidden" name="agregar_tarjeta" value="1">
-    <label>Número de Partido Jugado:</label>
-    <input type="number" name="numero_partido_jugado" required><br>
-    <label>Fecha de Cobro:</label>
-    <input type="date" name="fecha_cobro" required><br>
-    <label>Jugador:</label>
-    <input type="text" name="jugador" required><br>
-    <label>Categoría:</label>
-    <select name="categoria" required>
-        <option value="Abierta">Abierta</option>
-        <option value="+40">+40</option>
-        <option value="Femenina">Femenina</option>
-    </select><br>
-    <label>Tarjetas Rojas:</label>
-    <input type="number" name="tarjetas_rojas" required><br>
-    <label>Tarjetas Amarillas:</label>
-    <input type="number" name="tarjetas_amarillas" required><br>
-    <label>Observaciones:</label>
-    <textarea name="observaciones"></textarea><br>
-    <button type="submit">Agregar</button>
-</form>
+<!-- Ventana Emergente para Inicio de Sesión -->
+<div id="login-popup" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border: 1px solid black; z-index: 1000;">
+    <h2>Iniciar Sesión como Administrador</h2>
+    <form id="login-form">
+        <label>Usuario:</label>
+        <input type="text" id="usuario" required><br>
+        <label>Contraseña:</label>
+        <input type="password" id="contrasena" required><br>
+        <button type="button" onclick="validarCredenciales()">Ingresar</button>
+    </form>
+    <p id="error-message" style="color: red; display: none;">Usuario o contraseña incorrectos.</p>
+</div>
 
-<h2>Agregar Pago de Inscripción</h2>
-<form method="POST">
-    <input type="hidden" name="agregar_inscripcion" value="1">
-    <label>Equipo (opcional):</label>
-    <input type="text" name="equipo"><br>
-    <label>Jugador (opcional):</label>
-    <input type="text" name="jugador"><br>
-    <label>Categoría:</label>
-    <select name="categoria" required>
-        <option value="Abierta">Abierta</option>
-        <option value="+40">+40</option>
-        <option value="Femenina">Femenina</option>
-    </select><br>
-    <label>Fecha de Inscripción:</label>
-    <input type="date" name="fecha_inscripcion" required><br>
-    <label>Monto a Cobrar:</label>
-    <input type="number" step="0.01" name="monto_a_cobrar" required><br>
-    <label>Método de Pago:</label>
-    <select name="metodo_pago" required>
-        <option value="Efectivo">Efectivo</option>
-        <option value="Transferencia">Transferencia</option>
-        <option value="Pendiente">Pendiente</option>
-    </select><br>
-    <label>Observaciones:</label>
-    <textarea name="observaciones"></textarea><br>
-    <button type="submit">Agregar</button>
-</form>
+<!-- Contenido Principal -->
+<div id="main-content" style="display: none;">
+    <h2>Agregar Pago de Tarjetas</h2>
+    <form id="form-tarjetas">
+        <input type="hidden" name="agregar_tarjeta" value="1">
+        <label>Número de Partido Jugado:</label>
+        <input type="number" name="numero_partido_jugado" required><br>
+        <label>Fecha de Cobro:</label>
+        <input type="date" name="fecha_cobro" required><br>
+        <label>Jugador:</label>
+        <input type="text" name="jugador" required><br>
+        <label>Categoría:</label>
+        <select name="categoria" required>
+            <option value="Abierta">Abierta</option>
+            <option value="+40">+40</option>
+            <option value="Femenina">Femenina</option>
+        </select><br>
+        <label>Tarjetas Rojas:</label>
+        <input type="number" name="tarjetas_rojas" required><br>
+        <label>Tarjetas Amarillas:</label>
+        <input type="number" name="tarjetas_amarillas" required><br>
+        <label>Observaciones:</label>
+        <textarea name="observaciones"></textarea><br>
+        <button type="button" onclick="enviarFormulario('form-tarjetas')">Agregar</button>
+    </form>
+
+    <h2>Agregar Pago de Inscripción</h2>
+    <form id="form-inscripcion">
+        <input type="hidden" name="agregar_inscripcion" value="1">
+        <label>Equipo (opcional):</label>
+        <input type="text" name="equipo"><br>
+        <label>Jugador (opcional):</label>
+        <input type="text" name="jugador"><br>
+        <label>Categoría:</label>
+        <select name="categoria" required>
+            <option value="Abierta">Abierta</option>
+            <option value="+40">+40</option>
+            <option value="Femenina">Femenina</option>
+        </select><br>
+        <label>Fecha de cobro Inscripción:</label>
+        <input type="date" name="fecha_inscripcion" required><br>
+        <label>Monto a Cobrar:</label>
+        <input type="number" step="0.01" name="monto_a_cobrar" required><br>
+        <label>Método de Pago:</label>
+        <select name="metodo_pago" required>
+            <option value="Efectivo">Efectivo</option>
+            <option value="Transferencia">Transferencia</option>
+            <option value="Pendiente">Pendiente</option>
+        </select><br>
+        <label>Observaciones:</label>
+        <textarea name="observaciones"></textarea><br>
+        <button type="button" onclick="enviarFormulario('form-inscripcion')">Agregar</button>
+    </form>
+</div>
+
+<script>
+    // Credenciales predefinidas
+    const USUARIO_ADMIN = "admin";
+    const CONTRASENA_ADMIN = "admin";
+
+    // Verificar si el usuario ya ha iniciado sesión
+    window.onload = function () {
+        const isLoggedIn = localStorage.getItem("isLoggedIn");
+        if (isLoggedIn === "true") {
+            document.getElementById("main-content").style.display = "block";
+        } else {
+            document.getElementById("login-popup").style.display = "block";
+        }
+    };
+
+    function validarCredenciales() {
+        const usuario = document.getElementById("usuario").value;
+        const contrasena = document.getElementById("contrasena").value;
+
+        if (usuario === USUARIO_ADMIN && contrasena === CONTRASENA_ADMIN) {
+            // Guardar el estado de autenticación en localStorage
+            localStorage.setItem("isLoggedIn", "true");
+
+            // Ocultar la ventana emergente y mostrar el contenido principal
+            document.getElementById("login-popup").style.display = "none";
+            document.getElementById("main-content").style.display = "block";
+        } else {
+            // Mostrar mensaje de error
+            document.getElementById("error-message").style.display = "block";
+        }
+    }
+
+    function enviarFormulario(formId) {
+        const form = document.getElementById(formId);
+        const formData = new FormData(form);
+
+        fetch("/admin", {
+            method: "POST",
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Datos agregados correctamente.");
+                form.reset(); // Limpiar el formulario
+            } else {
+                alert("Error al agregar los datos.");
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("Ocurrió un error al procesar la solicitud.");
+        });
+    }
+
+    // Limpiar el estado de autenticación cuando se cierra la pestaña
+    window.onbeforeunload = function () {
+        localStorage.removeItem("isLoggedIn");
+    };
+</script>
 {% endblock %}

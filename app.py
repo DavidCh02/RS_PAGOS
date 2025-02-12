@@ -29,9 +29,27 @@ def index():
     return redirect(url_for('admin'))
 
 # Panel de administrador
+from flask import Flask, request, jsonify, render_template, redirect, url_for
+
+
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
-    if request.method == 'POST':
+    # Verificar credenciales si es una solicitud POST desde la ventana emergente
+    if request.method == 'POST' and 'usuario' in request.form:
+        usuario = request.form.get('usuario')
+        contrasena = request.form.get('contrasena')
+
+        # Credenciales predefinidas
+        USUARIO_ADMIN = "admin"
+        CONTRASENA_ADMIN = "password123"
+
+        if usuario == USUARIO_ADMIN and contrasena == CONTRASENA_ADMIN:
+            return jsonify({"success": True})  # Autenticación exitosa
+        else:
+            return jsonify({"success": False, "message": "Usuario o contraseña incorrectos."})
+
+    # Procesar formularios de agregar pagos
+    elif request.method == 'POST':
         conn = get_db_connection()
         try:
             # Agregar pago de tarjetas
@@ -43,7 +61,6 @@ def admin():
                 tarjetas_rojas = int(request.form['tarjetas_rojas'])
                 tarjetas_amarillas = int(request.form['tarjetas_amarillas'])
                 observaciones = request.form['observaciones']
-
                 conn.execute(text("""
                     INSERT INTO pago_tarjetas (
                         numero_partido_jugado, fecha_cobro, jugador, categoria,
@@ -64,7 +81,6 @@ def admin():
                 conn.commit()  # Confirmar los cambios
 
             # Agregar pago de inscripción
-            # Agregar pago de inscripción
             elif 'agregar_inscripcion' in request.form:
                 equipo = request.form['equipo']
                 jugador = request.form['jugador']
@@ -73,7 +89,6 @@ def admin():
                 monto_a_cobrar = float(request.form['monto_a_cobrar'])
                 metodo_pago = request.form['metodo_pago']  # Nuevo campo
                 observaciones = request.form['observaciones']
-
                 conn.execute(text("""
                     INSERT INTO pago_inscripcion (
                         equipo, jugador, categoria, fecha_inscripcion, monto_a_cobrar, metodo_pago, observaciones, estado_pago
@@ -93,10 +108,10 @@ def admin():
         finally:
             conn.close()
 
-        return redirect(url_for('admin'))
+        return jsonify({"success": True, "message": "Datos agregados correctamente."})
 
+    # Renderizar la plantilla HTML para GET
     return render_template('admin.html')
-
 
 from datetime import datetime, timedelta
 import pytz
@@ -305,82 +320,66 @@ def pagados_hoy():
 @app.route('/filtrar_pagos', methods=['GET', 'POST'])
 def filtrar_pagos():
     fecha_seleccionada = None
+    estado_seleccionado = None
     pagos_tarjetas = []
     pagos_inscripciones = []
 
     conn = get_db_connection()
     try:
         if request.method == 'POST':
+            # Obtener la fecha y el estado seleccionados
             fecha_seleccionada = request.form.get('fecha_cliente')
+            estado_seleccionado = request.form.get('estado_pago')
 
-            # Consultar pagos para la fecha seleccionada
-            result_tarjetas = conn.execute(text("""
-                SELECT *, EXTRACT(DOW FROM fecha_cobro) AS dia_semana
+            # Consultar pagos de tarjetas según los filtros
+            query_tarjetas = """
+                SELECT *
                 FROM pago_tarjetas
-                WHERE fecha_cobro = :fecha
-            """), {"fecha": fecha_seleccionada})
+                WHERE 1=1
+            """
+            params_tarjetas = {}
 
-            # Convertir los resultados en diccionarios manualmente
-            pagos_tarjetas = [
-                {
-                    "id_pago": row.id_pago,
-                    "numero_partido_jugado": row.numero_partido_jugado,
-                    "fecha_cobro": row.fecha_cobro,
-                    "jugador": row.jugador,
-                    "categoria": row.categoria,
-                    "tarjetas_rojas": row.tarjetas_rojas,
-                    "tarjetas_amarillas": row.tarjetas_amarillas,
-                    "valor_total_pagar": row.valor_total_pagar,
-                    "observaciones": row.observaciones,
-                    "estado_pago": row.estado_pago,
-                    "metodo_pago": row.metodo_pago,
-                    "dia_semana": int(row.dia_semana)
-                }
-                for row in result_tarjetas.fetchall()
-            ]
+            if fecha_seleccionada:
+                query_tarjetas += " AND fecha_cobro = :fecha"
+                params_tarjetas["fecha"] = fecha_seleccionada
 
-            result_inscripciones = conn.execute(text("""
-                SELECT *, EXTRACT(DOW FROM fecha_inscripcion) AS dia_semana
+            if estado_seleccionado:
+                query_tarjetas += " AND estado_pago = :estado_pago"
+                params_tarjetas["estado_pago"] = estado_seleccionado
+
+            result_tarjetas = conn.execute(text(query_tarjetas), params_tarjetas)
+            pagos_tarjetas = result_tarjetas.fetchall()
+
+            # Consultar pagos de inscripción según los filtros
+            query_inscripciones = """
+                SELECT *
                 FROM pago_inscripcion
-                WHERE fecha_inscripcion = :fecha
-            """), {"fecha": fecha_seleccionada})
+                WHERE 1=1
+            """
+            params_inscripciones = {}
 
-            # Convertir los resultados en diccionarios manualmente
-            pagos_inscripciones = [
-                {
-                    "id_inscripcion": row.id_inscripcion,
-                    "equipo": row.equipo,
-                    "jugador": row.jugador,
-                    "categoria": row.categoria,
-                    "fecha_inscripcion": row.fecha_inscripcion,
-                    "monto_a_cobrar": row.monto_a_cobrar,
-                    "observaciones": row.observaciones,
-                    "estado_pago": row.estado_pago,
-                    "metodo_pago": row.metodo_pago,
-                    "dia_semana": int(row.dia_semana)
-                }
-                for row in result_inscripciones.fetchall()
-            ]
+            if fecha_seleccionada:
+                query_inscripciones += " AND fecha_inscripcion = :fecha"
+                params_inscripciones["fecha"] = fecha_seleccionada
+
+            if estado_seleccionado:
+                query_inscripciones += " AND estado_pago = :estado_pago"
+                params_inscripciones["estado_pago"] = estado_seleccionado
+
+            result_inscripciones = conn.execute(text(query_inscripciones), params_inscripciones)
+            pagos_inscripciones = result_inscripciones.fetchall()
 
     finally:
         conn.close()
-
-    # Mapear números de día de la semana a nombres
-    dias_semana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
-
-    # Agregar el nombre del día de la semana a cada pago
-    for pago in pagos_tarjetas:
-        pago['dia_nombre'] = dias_semana[pago['dia_semana']]
-
-    for pago in pagos_inscripciones:
-        pago['dia_nombre'] = dias_semana[pago['dia_semana']]
 
     return render_template(
         'filtrar_pagos.html',
         pagos_tarjetas=pagos_tarjetas,
         pagos_inscripciones=pagos_inscripciones,
-        fecha_seleccionada=fecha_seleccionada
+        fecha_seleccionada=fecha_seleccionada,
+        estado_seleccionado=estado_seleccionado
     )
+
 
 
 if __name__ == '__main__':
@@ -399,3 +398,17 @@ if __name__ == '__main__':
         server_time_local = datetime.now(pytz.timezone('America/Bogota')).strftime('%Y-%m-%d %H:%M:%S')
 
         return f"Server Time (UTC): {server_time_utc}<br>Server Time (Local): {server_time_local}"
+
+
+    from flask import Flask, render_template, request, redirect, url_for, flash
+
+    app = Flask(__name__)
+    app.secret_key = 'tu_clave_secreta'  # Clave secreta para manejar mensajes flash
+
+    # Credenciales predefinidas
+    USUARIO_ADMIN = "admin"
+    CONTRASENA_ADMIN = "password123"
+
+    from flask import Flask, request, jsonify
+
+
