@@ -28,21 +28,21 @@
             <td>{{ pago.observaciones }}</td>
             <td>{{ pago.metodo_pago }}</td>
             <td>
-                <form method="POST" style="display:inline;">
-    <input type="hidden" name="id_pago" value="{{ pago.id_pago }}">
-    <input type="hidden" name="tipo_pago" value="tarjeta">
-    <label>Método:</label>
-    <select name="metodo_pago">
-        <option value="Efectivo">Efectivo</option>
-        <option value="Transferencia">Transferencia</option>
-    </select>
-    <label>Estado:</label>
-    <select name="estado_pago">
-        <option value="Pendiente">Pendiente</option>
-        <option value="Pagado">Pagado</option>
-    </select>
-    <button type="submit">Actualizar</button>
-</form>
+            <form method="POST" style="display:inline;">
+                <input type="hidden" name="id_pago" value="{{ pago.id_pago }}">
+                <input type="hidden" name="tipo_pago" value="tarjeta">
+                <label>Método:</label>
+                <select name="metodo_pago">
+                    <option value="Efectivo">Efectivo</option>
+                    <option value="Transferencia">Transferencia</option>
+                </select>
+                <label>Estado:</label>
+                <select name="estado_pago">
+                    <option value="Pendiente">Pendiente</option>
+                    <option value="Pagado">Pagado</option>
+                </select>
+                <button type="submit" name="actualizar_pago">Actualizar</button>
+            </form>
             </td>
         </tr>
         {% endfor %}
@@ -83,7 +83,7 @@
                     <option value="Pendiente">Pendiente</option>
                     <option value="Pagado">Pagado</option>
                 </select>
-                <button type="submit">Actualizar</button>
+                <button type="submit" name="actualizar_pago">Actualizar</button>
             </form>
             </td>
         </tr>

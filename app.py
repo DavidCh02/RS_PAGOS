@@ -116,7 +116,7 @@ def pagos():
                 estado_pago = request.form.get('estado_pago')
 
                 if tipo_pago == 'tarjeta':
-                    conn.execute(text("""
+                    result = conn.execute(text("""
                         UPDATE pago_tarjetas
                         SET metodo_pago = :metodo_pago, estado_pago = :estado_pago
                         WHERE id_pago = :id_pago
@@ -125,8 +125,9 @@ def pagos():
                         "metodo_pago": metodo_pago,
                         "estado_pago": estado_pago
                     })
+                    print(f"DEBUG: Filas afectadas (tarjetas): {result.rowcount}")
                 elif tipo_pago == 'inscripcion':
-                    conn.execute(text("""
+                    result = conn.execute(text("""
                         UPDATE pago_inscripcion
                         SET metodo_pago = :metodo_pago, estado_pago = :estado_pago
                         WHERE id_inscripcion = :id_pago
@@ -135,7 +136,12 @@ def pagos():
                         "metodo_pago": metodo_pago,
                         "estado_pago": estado_pago
                     })
-                conn.commit()
+                    print(f"DEBUG: Filas afectadas (inscripciones): {result.rowcount}")
+                else:
+                    flash("Error: Tipo de pago no válido.")
+                    return redirect(url_for('pagos'))
+
+                conn.commit()  # Confirmar los cambios
 
             # Filtrar por fecha seleccionada
             elif 'filtrar_fecha' in request.form:
@@ -158,6 +164,8 @@ def pagos():
         conn.close()
 
     return render_template('pagos.html', pagos_tarjetas=pagos_tarjetas, pagos_inscripciones=pagos_inscripciones, fecha_seleccionada=fecha_seleccionada)
+
+
 
 # Página para mostrar los pagos realizados hoy
 @app.route('/pagados_hoy', methods=['GET', 'POST'])
