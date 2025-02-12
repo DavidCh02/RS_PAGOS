@@ -40,54 +40,6 @@
             color: #ccc; /* Gris claro */
         }
 
-        table {
-            width: 95%;
-            margin: 20px auto;
-            border-collapse: collapse;
-            background-color: #2a2a2a; /* Negro más claro */
-            color: #fff;
-            font-size: 14px;
-        }
-
-        th, td {
-            padding: 10px;
-            text-align: center;
-            border: 1px solid #ffd700; /* Amarillo */
-        }
-
-        th {
-            background-color: #ffd700; /* Amarillo */
-            color: #000; /* Negro */
-        }
-
-        tr:nth-child(even) {
-            background-color: #3a3a3a; /* Negro más claro */
-        }
-
-        form {
-            display: inline;
-        }
-
-        select {
-            padding: 5px;
-            margin-right: 5px;
-            border: 1px solid #ffd700; /* Amarillo */
-            border-radius: 4px;
-        }
-
-        button {
-            padding: 5px 10px;
-            background-color: #ffd700; /* Amarillo */
-            color: #000; /* Negro */
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #e6b800; /* Amarillo más oscuro */
-        }
-
         .logo {
             display: flex;
             justify-content: center;
@@ -125,6 +77,47 @@
             text-decoration: underline;
         }
 
+        /* Estilo para tarjetas e inscripciones */
+        .payment-card, .payment-inscription {
+            background-color: #2a2a2a; /* Negro más claro */
+            margin: 10px auto;
+            padding: 15px;
+            border: 1px solid #ffd700; /* Amarillo */
+            border-radius: 8px;
+            max-width: 95%;
+        }
+
+        .payment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .payment-header h4 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: #ffd700; /* Amarillo */
+        }
+
+        .payment-header button {
+            background: none;
+            border: none;
+            color: #ffd700; /* Amarillo */
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .payment-details {
+            display: none;
+            margin-top: 10px;
+        }
+
+        .payment-details p {
+            margin: 5px 0;
+            color: #fff;
+        }
+
         /* Diseño responsivo */
         @media (max-width: 768px) {
             h2 {
@@ -135,25 +128,16 @@
                 font-size: 1rem;
             }
 
-            table {
-                font-size: 12px;
+            .payment-card, .payment-inscription {
+                padding: 10px;
             }
 
-            th, td {
-                padding: 8px;
+            .payment-header h4 {
+                font-size: 1rem;
             }
 
-            button {
-                font-size: 12px;
-                padding: 4px 8px;
-            }
-
-            .logo img {
-                width: 80px;
-            }
-
-            .imagen-container img {
-                max-width: 90%;
+            .payment-header button {
+                font-size: 1rem;
             }
         }
 
@@ -166,25 +150,16 @@
                 font-size: 0.9rem;
             }
 
-            table {
-                font-size: 10px;
+            .payment-card, .payment-inscription {
+                padding: 8px;
             }
 
-            th, td {
-                padding: 6px;
+            .payment-header h4 {
+                font-size: 0.9rem;
             }
 
-            button {
-                font-size: 10px;
-                padding: 3px 6px;
-            }
-
-            .logo img {
-                width: 60px;
-            }
-
-            .imagen-container img {
-                max-width: 80%;
+            .payment-header button {
+                font-size: 0.9rem;
             }
         }
     </style>
@@ -192,7 +167,7 @@
 <body>
     <!-- Logo de la empresa -->
     <div class="logo">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Football_%28soccer_ball%29.svg/1200px-Football_%28soccer_ball%29.svg.png" alt="Logo Balón de Oro">
+        <img src="https://png.pngtree.com/png-clipart/20240312/original/pngtree-illustration-of-golden-soccer-symbol-it-s-winner-concept-png-image_14575046.png" alt="Logo Balón de Oro">
     </div>
 
     <!-- Contenido principal -->
@@ -213,95 +188,69 @@
     <!-- Pagos de Tarjetas -->
     {% if pagos.tarjetas %}
     <h4>Pagos de Tarjetas</h4>
-    <table>
-        <thead>
-            <tr>
-                <th>Jugador</th>
-                <th>Categoría</th>
-                <th>Tarjetas Rojas</th>
-                <th>Tarjetas Amarillas</th>
-                <th>Valor Total</th>
-                <th>Observaciones</th>
-                <th>Método de Pago</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for pago in pagos.tarjetas %}
-            <tr>
-                <td>{{ pago.jugador }}</td>
-                <td>{{ pago.categoria }}</td>
-                <td>{{ pago.tarjetas_rojas }}</td>
-                <td>{{ pago.tarjetas_amarillas }}</td>
-                <td>${{ pago.valor_total_pagar }}</td>
-                <td>{{ pago.observaciones }}</td>
-                <td>{{ pago.metodo_pago }}</td>
-                <td>
-                    <form method="POST" style="display:inline;">
-                        <input type="hidden" name="id_pago" value="{{ pago.id_pago }}">
-                        <input type="hidden" name="tipo_pago" value="tarjeta">
-                        <label>Método:</label>
-                        <select name="metodo_pago">
-                            <option value="Efectivo">Efectivo</option>
-                            <option value="Transferencia">Transferencia</option>
-                        </select>
-                        <label>Estado:</label>
-                        <select name="estado_pago">
-                            <option value="Pendiente">Pendiente</option>
-                            <option value="Pagado">Pagado</option>
-                        </select>
-                        <button type="submit" name="actualizar_pago">Actualizar</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    {% for pago in pagos.tarjetas %}
+    <div class="payment-card">
+        <div class="payment-header" onclick="toggleDetails('tarjeta-{{ loop.index }}')">
+            <h4>{{ pago.jugador }} - ${{ pago.valor_total_pagar }}</h4>
+            <button id="btn-tarjeta-{{ loop.index }}">+</button>
+        </div>
+        <div class="payment-details" id="tarjeta-{{ loop.index }}">
+            <p><strong>Categoría:</strong> {{ pago.categoria }}</p>
+            <p><strong>Tarjetas Rojas:</strong> {{ pago.tarjetas_rojas }}</p>
+            <p><strong>Tarjetas Amarillas:</strong> {{ pago.tarjetas_amarillas }}</p>
+            <p><strong>Observaciones:</strong> {{ pago.observaciones }}</p>
+            <p><strong>Método de Pago:</strong> {{ pago.metodo_pago }}</p>
+            <form method="POST" style="display:inline;">
+                <input type="hidden" name="id_pago" value="{{ pago.id_pago }}">
+                <input type="hidden" name="tipo_pago" value="tarjeta">
+                <label>Método:</label>
+                <select name="metodo_pago">
+                    <option value="Efectivo">Efectivo</option>
+                    <option value="Transferencia">Transferencia</option>
+                </select>
+                <label>Estado:</label>
+                <select name="estado_pago">
+                    <option value="Pendiente">Pendiente</option>
+                    <option value="Pagado">Pagado</option>
+                </select>
+                <button type="submit" name="actualizar_pago">Actualizar</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
     {% endif %}
 
     <!-- Pagos de Inscripciones -->
     {% if pagos.inscripciones %}
     <h4>Pagos de Inscripciones</h4>
-    <table>
-        <thead>
-            <tr>
-                <th>Jugador/Equipo</th>
-                <th>Categoría</th>
-                <th>Monto a Cobrar</th>
-                <th>Observaciones</th>
-                <th>Método de Pago</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for pago in pagos.inscripciones %}
-            <tr>
-                <td>{{ pago.jugador or pago.equipo }}</td>
-                <td>{{ pago.categoria }}</td>
-                <td>${{ pago.monto_a_cobrar }}</td>
-                <td>{{ pago.observaciones }}</td>
-                <td>{{ pago.metodo_pago }}</td>
-                <td>
-                    <form method="POST" style="display:inline;">
-                        <input type="hidden" name="id_pago" value="{{ pago.id_inscripcion }}">
-                        <input type="hidden" name="tipo_pago" value="inscripcion">
-                        <label>Método:</label>
-                        <select name="metodo_pago">
-                            <option value="Efectivo">Efectivo</option>
-                            <option value="Transferencia">Transferencia</option>
-                        </select>
-                        <label>Estado:</label>
-                        <select name="estado_pago">
-                            <option value="Pendiente">Pendiente</option>
-                            <option value="Pagado">Pagado</option>
-                        </select>
-                        <button type="submit" name="actualizar_pago">Actualizar</button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    {% for pago in pagos.inscripciones %}
+    <div class="payment-inscription">
+        <div class="payment-header" onclick="toggleDetails('inscripcion-{{ loop.index }}')">
+            <h4>{{ pago.jugador or pago.equipo }} - ${{ pago.monto_a_cobrar }}</h4>
+            <button id="btn-inscripcion-{{ loop.index }}">+</button>
+        </div>
+        <div class="payment-details" id="inscripcion-{{ loop.index }}">
+            <p><strong>Categoría:</strong> {{ pago.categoria }}</p>
+            <p><strong>Observaciones:</strong> {{ pago.observaciones }}</p>
+            <p><strong>Método de Pago:</strong> {{ pago.metodo_pago }}</p>
+            <form method="POST" style="display:inline;">
+                <input type="hidden" name="id_pago" value="{{ pago.id_inscripcion }}">
+                <input type="hidden" name="tipo_pago" value="inscripcion">
+                <label>Método:</label>
+                <select name="metodo_pago">
+                    <option value="Efectivo">Efectivo</option>
+                    <option value="Transferencia">Transferencia</option>
+                </select>
+                <label>Estado:</label>
+                <select name="estado_pago">
+                    <option value="Pendiente">Pendiente</option>
+                    <option value="Pagado">Pagado</option>
+                </select>
+                <button type="submit" name="actualizar_pago">Actualizar</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
     {% endif %}
     {% endfor %}
 
@@ -312,6 +261,21 @@
     <div class="imagen-container">
         <img src="https://via.placeholder.com/800x400" alt="Imagen de ejemplo">
     </div>
+
+    <script>
+        // Función para mostrar/ocultar detalles
+        function toggleDetails(id) {
+            const details = document.getElementById(id);
+            const button = document.querySelector(`#btn-${id}`);
+            if (details.style.display === "none" || details.style.display === "") {
+                details.style.display = "block";
+                button.textContent = "-";
+            } else {
+                details.style.display = "none";
+                button.textContent = "+";
+            }
+        }
+    </script>
 </body>
 </html>
 {% endblock %}
