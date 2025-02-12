@@ -14,6 +14,15 @@ engine = create_engine(DATABASE_URL)
 def get_db_connection():
     return engine.connect()
 
+
+from datetime import datetime
+import pytz
+
+# Configurar la zona horaria UTC-5
+timezone = pytz.timezone('America/Bogota')
+today = datetime.now(timezone).strftime('%Y-%m-%d')  # Fecha actual en UTC-5
+
+
 # Ruta principal
 @app.route('/')
 def index():
@@ -92,65 +101,64 @@ def admin():
 # Página de pagos del día actual
 @app.route('/pagos', methods=['GET', 'POST'])
 def pagos():
-    today = datetime.today().strftime('%Y-%m-%d')
+    # Fecha predeterminada: hoy
+    today = datetime.now(pytz.timezone('America/Bogota')).strftime('%Y-%m-%d')
+    fecha_seleccionada = today  # Por defecto, usa la fecha actual
+
     conn = get_db_connection()
     try:
         if request.method == 'POST':
-            # Obtener datos del formulario
-            id_pago = int(request.form.get('id_pago'))
-            tipo_pago = request.form.get('tipo_pago')  # "tarjeta" o "inscripcion"
-            metodo_pago = request.form.get('metodo_pago')
-            estado_pago = request.form.get('estado_pago')
+            # Actualizar el estado de pago
+            if 'actualizar_pago' in request.form:
+                id_pago = int(request.form.get('id_pago'))
+                tipo_pago = request.form.get('tipo_pago')  # "tarjeta" o "inscripcion"
+                metodo_pago = request.form.get('metodo_pago')
+                estado_pago = request.form.get('estado_pago')
 
-            print(f"DEBUG: id_pago={id_pago}, tipo_pago={tipo_pago}, metodo_pago={metodo_pago}, estado_pago={estado_pago}")
+                if tipo_pago == 'tarjeta':
+                    conn.execute(text("""
+                        UPDATE pago_tarjetas
+                        SET metodo_pago = :metodo_pago, estado_pago = :estado_pago
+                        WHERE id_pago = :id_pago
+                    """), {
+                        "id_pago": id_pago,
+                        "metodo_pago": metodo_pago,
+                        "estado_pago": estado_pago
+                    })
+                elif tipo_pago == 'inscripcion':
+                    conn.execute(text("""
+                        UPDATE pago_inscripcion
+                        SET metodo_pago = :metodo_pago, estado_pago = :estado_pago
+                        WHERE id_inscripcion = :id_pago
+                    """), {
+                        "id_pago": id_pago,
+                        "metodo_pago": metodo_pago,
+                        "estado_pago": estado_pago
+                    })
+                conn.commit()
 
-            if not id_pago or not tipo_pago:
-                flash("Error: Falta información en el formulario.")
-                return redirect(url_for('pagos'))
+            # Filtrar por fecha seleccionada
+            elif 'filtrar_fecha' in request.form:
+                fecha_seleccionada = request.form.get('fecha')
 
-            if tipo_pago == 'tarjeta':
-                result = conn.execute(text("""
-                    UPDATE pago_tarjetas
-                    SET metodo_pago = :metodo_pago, estado_pago = :estado_pago
-                    WHERE id_pago = :id_pago
-                """), {
-                    "id_pago": id_pago,
-                    "metodo_pago": metodo_pago,
-                    "estado_pago": estado_pago
-                })
-                print(f"DEBUG: Filas afectadas (tarjetas): {result.rowcount}")
-            elif tipo_pago == 'inscripcion':
-                result = conn.execute(text("""
-                    UPDATE pago_inscripcion
-                    SET metodo_pago = :metodo_pago, estado_pago = :estado_pago
-                    WHERE id_inscripcion = :id_pago
-                """), {
-                    "id_pago": id_pago,
-                    "metodo_pago": metodo_pago,
-                    "estado_pago": estado_pago
-                })
-                print(f"DEBUG: Filas afectadas (inscripciones): {result.rowcount}")
-            else:
-                flash("Error: Tipo de pago no válido.")
-                return redirect(url_for('pagos'))
-
-            conn.commit()  # Confirmar los cambios
-
-        # Consultar pagos pendientes de hoy
+        # Consultar pagos pendientes para la fecha seleccionada
         result_tarjetas = conn.execute(text("""
-            SELECT * FROM pago_tarjetas WHERE fecha_cobro = :fecha AND estado_pago = 'Pendiente'
-        """), {"fecha": today})
+            SELECT * FROM pago_tarjetas
+            WHERE estado_pago = 'Pendiente' AND fecha_cobro = :fecha
+        """), {"fecha": fecha_seleccionada})
         pagos_tarjetas = result_tarjetas.fetchall()
 
         result_inscripciones = conn.execute(text("""
-            SELECT * FROM pago_inscripcion WHERE fecha_inscripcion = :fecha AND estado_pago = 'Pendiente'
-        """), {"fecha": today})
+            SELECT * FROM pago_inscripcion
+            WHERE estado_pago = 'Pendiente' AND fecha_inscripcion = :fecha
+        """), {"fecha": fecha_seleccionada})
         pagos_inscripciones = result_inscripciones.fetchall()
 
     finally:
         conn.close()
 
-    return render_template('pagos.html', pagos_tarjetas=pagos_tarjetas, pagos_inscripciones=pagos_inscripciones)
+    return render_template('pagos.html', pagos_tarjetas=pagos_tarjetas, pagos_inscripciones=pagos_inscripciones, fecha_seleccionada=fecha_seleccionada)
+
 # Página para mostrar los pagos realizados hoy
 @app.route('/pagados_hoy', methods=['GET', 'POST'])
 def pagados_hoy():
