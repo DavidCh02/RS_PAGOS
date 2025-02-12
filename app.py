@@ -18,9 +18,9 @@ def get_db_connection():
 from datetime import datetime
 import pytz
 
-# Configurar la zona horaria UTC-5
-timezone = pytz.timezone('America/Bogota')
-today = datetime.now(timezone).strftime('%Y-%m-%d')  # Fecha actual en UTC-5
+# Obtener la fecha actual en UTC
+timezone = pytz.timezone('UTC')
+today_utc = datetime.now(timezone).strftime('%Y-%m-%d')  # Fecha actual en UTC
 
 
 # Ruta principal
@@ -168,26 +168,46 @@ def pagos():
 
 
 # Página para mostrar los pagos realizados hoy
+from datetime import datetime
+import pytz
+
 @app.route('/pagados_hoy', methods=['GET', 'POST'])
 def pagados_hoy():
-    today = datetime.today().strftime('%Y-%m-%d')
+    # Obtener la fecha actual en UTC
+    timezone = pytz.timezone('UTC')
+    today_utc = datetime.now(timezone).strftime('%Y-%m-%d')
+
     conn = get_db_connection()
     try:
-        # Consultar pagos realizados hoy
+        # Consultar pagos realizados hoy en UTC
         result_tarjetas = conn.execute(text("""
-            SELECT * FROM pago_tarjetas WHERE fecha_cobro = :fecha AND estado_pago = 'Pagado'
-        """), {"fecha": today})
+            SELECT * FROM pago_tarjetas
+            WHERE fecha_cobro = :fecha AND estado_pago = 'Pagado'
+        """), {"fecha": today_utc})
         pagos_tarjetas = result_tarjetas.fetchall()
 
         result_inscripciones = conn.execute(text("""
-            SELECT * FROM pago_inscripcion WHERE fecha_inscripcion = :fecha AND estado_pago = 'Pagado'
-        """), {"fecha": today})
+            SELECT * FROM pago_inscripcion
+            WHERE fecha_inscripcion = :fecha AND estado_pago = 'Pagado'
+        """), {"fecha": today_utc})
         pagos_inscripciones = result_inscripciones.fetchall()
 
     finally:
         conn.close()
 
+    # Convertir fechas UTC a zona horaria local (UTC-5)
+    timezone_local = pytz.timezone('America/Bogota')
+    pagos_tarjetas = [
+        {**dict(pago), "fecha_cobro": pytz.utc.localize(pago.fecha_cobro).astimezone(timezone_local).strftime('%Y-%m-%d')}
+        for pago in pagos_tarjetas
+    ]
+    pagos_inscripciones = [
+        {**dict(pago), "fecha_inscripcion": pytz.utc.localize(pago.fecha_inscripcion).astimezone(timezone_local).strftime('%Y-%m-%d')}
+        for pago in pagos_inscripciones
+    ]
+
     return render_template('pagados_hoy.html', pagos_tarjetas=pagos_tarjetas, pagos_inscripciones=pagos_inscripciones)
+
 
 @app.route('/filtrar_pagos', methods=['GET', 'POST'])
 def filtrar_pagos():
@@ -215,3 +235,17 @@ def filtrar_pagos():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
+    @app.route('/debug-time')
+    def debug_time():
+        from datetime import datetime
+        import pytz
+
+        # Fecha y hora del servidor en UTC
+        server_time_utc = datetime.now(pytz.timezone('UTC')).strftime('%Y-%m-%d %H:%M:%S')
+
+        # Fecha y hora del servidor en tu zona horaria (UTC-5)
+        server_time_local = datetime.now(pytz.timezone('America/Bogota')).strftime('%Y-%m-%d %H:%M:%S')
+
+        return f"Server Time (UTC): {server_time_utc}<br>Server Time (Local): {server_time_local}"
