@@ -34,26 +34,60 @@ from flask import Flask, request, jsonify, render_template, redirect, url_for
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
-    # Verificar credenciales si es una solicitud POST desde la ventana emergente
-    if request.method == 'POST' and 'usuario' in request.form:
-        usuario = request.form.get('usuario')
-        contrasena = request.form.get('contrasena')
+    # Obtener lista de equipos existentes
+    conn = get_db_connection()
+    try:
+        result_equipos = conn.execute(text("SELECT id_equipo, nombre_equipo FROM equipo_pagos"))
+        equipos_existentes = {row.id_equipo: row.nombre_equipo for row in result_equipos.fetchall()}
+    finally:
+        conn.close()
 
-        # Credenciales predefinidas
-        USUARIO_ADMIN = "admin"
-        CONTRASENA_ADMIN = "password123"
-
-        if usuario == USUARIO_ADMIN and contrasena == CONTRASENA_ADMIN:
-            return jsonify({"success": True})  # Autenticación exitosa
-        else:
-            return jsonify({"success": False, "message": "Usuario o contraseña incorrectos."})
-
-    # Procesar formularios de agregar pagos
-    elif request.method == 'POST':
+    if request.method == 'POST':
         conn = get_db_connection()
         try:
-            # Agregar pago de tarjetas
-            if 'agregar_tarjeta' in request.form:
+            # Agregar pago de inscripción
+            if 'agregar_inscripcion' in request.form:
+                equipo_id = request.form.get('equipo_id')  # ID del equipo seleccionado o nuevo
+                jugador = request.form['jugador']
+                categoria = request.form['categoria']
+                fecha_inscripcion = request.form['fecha_inscripcion']
+                monto_a_cobrar = float(request.form['monto_a_cobrar'])
+                metodo_pago = request.form['metodo_pago']
+                observaciones = request.form['observaciones']
+
+                equipo_id = request.form.get('equipo_id')  # Obtener el ID del equipo seleccionado
+                if not equipo_id and request.form.get('nuevo_equipo'):
+                    # Si el equipo no existe, agregarlo a la tabla equipo_pagos
+                    result = conn.execute(text("""
+                        INSERT INTO equipo_pagos (nombre_equipo)
+                        VALUES (:nombre_equipo)
+                        RETURNING id_equipo
+                    """), {"nombre_equipo": request.form['nuevo_equipo']})
+                    equipo_id = result.fetchone()[0]  # Obtener el ID del nuevo equipo
+                else:
+                    equipo_id = int(equipo_id)
+
+                # Insertar el pago de inscripción con el ID del equipo
+                conn.execute(text("""
+                    INSERT INTO pago_inscripcion (
+                        id_equipo, jugador, categoria, fecha_inscripcion,
+                        monto_a_cobrar, metodo_pago, observaciones, estado_pago
+                    ) VALUES (:id_equipo, :jugador, :categoria, :fecha_inscripcion,
+                    :monto_a_cobrar, :metodo_pago, :observaciones, :estado_pago)
+                """), {
+                    "id_equipo": equipo_id,
+                    "jugador": jugador,
+                    "categoria": categoria,
+                    "fecha_inscripcion": fecha_inscripcion,
+                    "monto_a_cobrar": monto_a_cobrar,
+                    "metodo_pago": metodo_pago,
+                    "observaciones": observaciones,
+                    "estado_pago": "Pendiente"
+                })
+                conn.commit()  # Confirmar los cambios
+
+            # Agregar pago de tarjetas (sin cambios significativos aquí)
+            elif 'agregar_tarjeta' in request.form:
                 numero_partido_jugado = int(request.form['numero_partido_jugado'])
                 fecha_cobro = request.form['fecha_cobro']
                 jugador = request.form['jugador']
@@ -61,12 +95,26 @@ def admin():
                 tarjetas_rojas = int(request.form['tarjetas_rojas'])
                 tarjetas_amarillas = int(request.form['tarjetas_amarillas'])
                 observaciones = request.form['observaciones']
+                equipo_id = request.form.get('equipo_id')  # Nuevo campo para el equipo
+
+                # Si el equipo no existe, agregarlo a la tabla equipo_pagos
+                if not equipo_id and request.form.get('nuevo_equipo'):
+                    result = conn.execute(text("""
+                        INSERT INTO equipo_pagos (nombre_equipo)
+                        VALUES (:nombre_equipo)
+                        RETURNING id_equipo
+                    """), {"nombre_equipo": request.form['nuevo_equipo']})
+                    equipo_id = result.fetchone()[0]  # Obtener el ID del nuevo equipo
+                else:
+                    equipo_id = int(equipo_id)
+
+                # Insertar el pago de tarjetas con el ID del equipo
                 conn.execute(text("""
                     INSERT INTO pago_tarjetas (
                         numero_partido_jugado, fecha_cobro, jugador, categoria,
-                        tarjetas_rojas, tarjetas_amarillas, observaciones, estado_pago, metodo_pago
+                        tarjetas_rojas, tarjetas_amarillas, observaciones, estado_pago, metodo_pago, id_equipo
                     ) VALUES (:numero_partido_jugado, :fecha_cobro, :jugador, :categoria,
-                              :tarjetas_rojas, :tarjetas_amarillas, :observaciones, :estado_pago, :metodo_pago)
+                    :tarjetas_rojas, :tarjetas_amarillas, :observaciones, :estado_pago, :metodo_pago, :id_equipo)
                 """), {
                     "numero_partido_jugado": numero_partido_jugado,
                     "fecha_cobro": fecha_cobro,
@@ -76,42 +124,16 @@ def admin():
                     "tarjetas_amarillas": tarjetas_amarillas,
                     "observaciones": observaciones,
                     "estado_pago": "Pendiente",
-                    "metodo_pago": "Pendiente"
+                    "metodo_pago": "Pendiente",
+                    "id_equipo": equipo_id
                 })
                 conn.commit()  # Confirmar los cambios
-
-            # Agregar pago de inscripción
-            elif 'agregar_inscripcion' in request.form:
-                equipo = request.form['equipo']
-                jugador = request.form['jugador']
-                categoria = request.form['categoria']
-                fecha_inscripcion = request.form['fecha_inscripcion']
-                monto_a_cobrar = float(request.form['monto_a_cobrar'])
-                metodo_pago = request.form['metodo_pago']  # Nuevo campo
-                observaciones = request.form['observaciones']
-                conn.execute(text("""
-                    INSERT INTO pago_inscripcion (
-                        equipo, jugador, categoria, fecha_inscripcion, monto_a_cobrar, metodo_pago, observaciones, estado_pago
-                    ) VALUES (:equipo, :jugador, :categoria, :fecha_inscripcion, :monto_a_cobrar, :metodo_pago, :observaciones, :estado_pago)
-                """), {
-                    "equipo": equipo,
-                    "jugador": jugador,
-                    "categoria": categoria,
-                    "fecha_inscripcion": fecha_inscripcion,
-                    "monto_a_cobrar": monto_a_cobrar,
-                    "metodo_pago": metodo_pago,
-                    "observaciones": observaciones,
-                    "estado_pago": "Pendiente"  # Estado inicial
-                })
-                conn.commit()  # Confirmar los cambios
-
         finally:
             conn.close()
-
         return jsonify({"success": True, "message": "Datos agregados correctamente."})
 
-    # Renderizar la plantilla HTML para GET
-    return render_template('admin.html')
+    # Renderizar la plantilla con la lista de equipos existentes
+    return render_template('admin.html', equipos_existentes=equipos_existentes)
 
 from datetime import datetime, timedelta
 import pytz
@@ -120,6 +142,12 @@ from datetime import datetime, timedelta
 import pytz
 
 from flask import request, redirect, url_for
+
+from datetime import datetime, timedelta
+import pytz
+from flask import request, redirect, url_for, render_template
+from sqlalchemy import text
+
 
 @app.route('/pagos', methods=['GET', 'POST'])
 def pagos():
@@ -175,27 +203,28 @@ def pagos():
                         "metodo_pago": metodo_pago,
                         "estado_pago": estado_pago
                     })
-                conn.commit()
 
-                # Redirigir para evitar problemas con el formulario POST
-                return redirect(url_for('pagos'))
+                conn.commit()  # Confirmar los cambios
+                return redirect(url_for('pagos'))  # Redirigir para evitar problemas con el formulario POST
 
         # Consultar pagos pendientes de sábado y domingo de la semana actual
         result_tarjetas = conn.execute(text("""
-            SELECT *
-            FROM pago_tarjetas
-            WHERE estado_pago = 'Pendiente'
-              AND EXTRACT(DOW FROM fecha_cobro) IN (0, 6)  -- Domingo (0) y Sábado (6)
-              AND fecha_cobro BETWEEN :start_of_week AND :end_of_week
+            SELECT pt.*, ep.nombre_equipo
+            FROM pago_tarjetas pt
+            LEFT JOIN equipo_pagos ep ON pt.id_equipo = ep.id_equipo
+            WHERE pt.estado_pago = 'Pendiente'
+              AND EXTRACT(DOW FROM pt.fecha_cobro) IN (0, 6)  -- Domingo (0) y Sábado (6)
+              AND pt.fecha_cobro BETWEEN :start_of_week AND :end_of_week
         """), {"start_of_week": start_of_week, "end_of_week": end_of_week})
         pagos_tarjetas = result_tarjetas.fetchall()
 
         result_inscripciones = conn.execute(text("""
-            SELECT *
-            FROM pago_inscripcion
-            WHERE estado_pago = 'Pendiente'
-              AND EXTRACT(DOW FROM fecha_inscripcion) IN (0, 6)  -- Domingo (0) y Sábado (6)
-              AND fecha_inscripcion BETWEEN :start_of_week AND :end_of_week
+            SELECT pi.*, ep.nombre_equipo
+            FROM pago_inscripcion pi
+            LEFT JOIN equipo_pagos ep ON pi.id_equipo = ep.id_equipo
+            WHERE pi.estado_pago = 'Pendiente'
+              AND EXTRACT(DOW FROM pi.fecha_inscripcion) IN (0, 6)
+              AND pi.fecha_inscripcion BETWEEN :start_of_week AND :end_of_week
         """), {"start_of_week": start_of_week, "end_of_week": end_of_week})
         pagos_inscripciones = result_inscripciones.fetchall()
 
@@ -224,7 +253,6 @@ def pagos():
         fecha_sabado=sabado,
         fecha_domingo=domingo
     )
-
 
 # Página para mostrar los pagos realizados hoy
 from datetime import datetime
@@ -410,5 +438,4 @@ if __name__ == '__main__':
     CONTRASENA_ADMIN = "password123"
 
     from flask import Flask, request, jsonify
-
 
