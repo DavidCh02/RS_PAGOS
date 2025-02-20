@@ -10,8 +10,7 @@
         color: #ffffff;
     }
 
-    h1,
-    h2 {
+    h1, h2 {
         text-align: center;
         color: #ffffff;
     }
@@ -19,6 +18,14 @@
     h3 {
         color: #f0d8c0;
         text-align: center;
+    }
+
+    .container {
+        width: 95%;
+        max-width: 1200px;
+        margin: auto;
+        overflow: hidden;
+        padding: 20px;
     }
 
     table {
@@ -31,8 +38,7 @@
         margin-bottom: 20px;
     }
 
-    th,
-    td {
+    th, td {
         padding: 12px;
         border: 1px solid #555;
         text-align: left;
@@ -48,12 +54,18 @@
         background-color: #444;
     }
 
-    .container {
-        width: 95%;
-        max-width: 1200px;
-        margin: auto;
-        overflow: hidden;
-        padding: 20px;
+    /* Estilos para dispositivos móviles */
+    @media (max-width: 768px) {
+        table {
+            font-size: 14px;
+            overflow-x: auto;
+            display: block;
+            white-space: nowrap;
+        }
+
+        th, td {
+            padding: 8px;
+        }
     }
 </style>
 
