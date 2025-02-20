@@ -1,73 +1,139 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Pagos Realizados Esta Semana</h2>
-<p><strong>Desde:</strong> {{ start_of_week }} ({{ start_of_week_nombre }}) <strong>Hasta:</strong> {{ end_of_week }} ({{ end_of_week_nombre }})</p>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #121212;
+        margin: 0;
+        padding: 0;
+        color: #ffffff;
+    }
 
-<!-- Mostrar pagos agrupados por día de la semana -->
-{% for dia, pagos in pagos_por_dia.items() %}
-<h3>{{ dia }}</h3>
+    h1,
+    h2 {
+        text-align: center;
+        color: #ffffff;
+    }
 
-<!-- Pagos de Tarjetas -->
-{% if pagos.tarjetas %}
-<h4>Pagos de Tarjetas</h4>
-<table border="1">
-    <thead>
-        <tr>
-            <th>Jugador</th>
-            <th>Categoría</th>
-            <th>Tarjetas Rojas</th>
-            <th>Tarjetas Amarillas</th>
-            <th>Valor Total</th>
-            <th>Observaciones</th>
-            <th>Método de Pago</th>
-            <th>Fecha de Pago</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for pago in pagos.tarjetas %}
-        <tr>
-            <td>{{ pago.jugador }}</td>
-            <td>{{ pago.categoria }}</td>
-            <td>{{ pago.tarjetas_rojas }}</td>
-            <td>{{ pago.tarjetas_amarillas }}</td>
-            <td>${{ pago.valor_total_pagar }}</td>
-            <td>{{ pago.observaciones }}</td>
-            <td>{{ pago.metodo_pago }}</td>
-            <td>{{ pago.fecha_cobro_local.date() }} ({{ dia }})</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% endif %}
+    h3 {
+        color: #f0d8c0;
+        text-align: center;
+    }
 
-<!-- Pagos de Inscripciones -->
-{% if pagos.inscripciones %}
-<h4>Pagos de Inscripciones</h4>
-<table border="1">
-    <thead>
-        <tr>
-            <th>Jugador/Equipo</th>
-            <th>Categoría</th>
-            <th>Monto a Cobrar</th>
-            <th>Observaciones</th>
-            <th>Método de Pago</th>
-            <th>Fecha de Pago</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for pago in pagos.inscripciones %}
-        <tr>
-            <td>{{ pago.jugador or pago.equipo }}</td>
-            <td>{{ pago.categoria }}</td>
-            <td>${{ pago.monto_a_cobrar }}</td>
-            <td>{{ pago.observaciones }}</td>
-            <td>{{ pago.metodo_pago }}</td>
-            <td>{{ pago.fecha_inscripcion_local.date() }} ({{ dia }})</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% endif %}
-{% endfor %}
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #333;
+        color: #ddd;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 20px;
+    }
+
+    th,
+    td {
+        padding: 12px;
+        border: 1px solid #555;
+        text-align: left;
+    }
+
+    th {
+        background: #555;
+        color: #eee;
+        text-align: center;
+    }
+
+    tbody tr:nth-child(even) {
+        background-color: #444;
+    }
+
+    .container {
+        width: 95%;
+        max-width: 1200px;
+        margin: auto;
+        overflow: hidden;
+        padding: 20px;
+    }
+</style>
+
+<div class="container">
+    <h2>Pagos Realizados Esta Semana</h2>
+    <p><strong>Desde:</strong> {{ start_of_week }} ({{ start_of_week_nombre }}) <strong>Hasta:</strong> {{ end_of_week }} ({{ end_of_week_nombre }})</p>
+
+    <!-- Mostrar pagos agrupados por día de la semana -->
+    {% for dia, pagos in pagos_por_dia.items() %}
+    <h3>{{ dia }}</h3>
+
+    <!-- Pagos de Tarjetas -->
+    {% if pagos.tarjetas %}
+    <h4>Pagos de Tarjetas</h4>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Jugador</th>
+                <th>Categoría</th>
+                <th>Tarjetas Rojas</th>
+                <th>Tarjetas Amarillas</th>
+                <th>Valor Total</th>
+                <th>Observaciones</th>
+                <th>Método de Pago</th>
+                <th>Fecha de Pago</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for pago in pagos.tarjetas %}
+            <tr>
+                <td>{{ pago.jugador }}</td>
+                <td>{{ pago.categoria }}</td>
+                <td>{{ pago.tarjetas_rojas }}</td>
+                <td>{{ pago.tarjetas_amarillas }}</td>
+                <td>${{ pago.valor_total_pagar }}</td>
+                <td>{{ pago.observaciones }}</td>
+                <td>{{ pago.metodo_pago }}</td>
+                <td>{{ pago.fecha_cobro_local.date() }} ({{ dia }})</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    <!-- Pagos de Inscripciones -->
+    {% if pagos.inscripciones %}
+    <h4>Pagos de Inscripciones</h4>
+    <table border="1" id="tabla-inscripciones">
+        <thead>
+            <tr>
+                <th>Jugador/Equipo</th>
+                <th>Categoría</th>
+                <th>Monto a Cobrar</th>
+                <th>Observaciones</th>
+                <th>Método de Pago</th>
+                <th>Fecha de Pago</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for pago in pagos.inscripciones %}
+            <tr>
+                <td>
+                    {% if pago.jugador %}
+                        {{ pago.jugador }}
+                    {% elif pago.equipo %}
+                        {{ pago.equipo }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
+                <td>{{ pago.categoria }}</td>
+                <td>${{ pago.monto_a_cobrar }}</td>
+                <td>{{ pago.observaciones }}</td>
+                <td>{{ pago.metodo_pago }}</td>
+                <td>{{ pago.fecha_inscripcion_local.date() }} ({{ dia }})</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+    {% endfor %}
+</div>
 {% endblock %}

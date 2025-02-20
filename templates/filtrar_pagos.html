@@ -1,94 +1,372 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Filtrar Pagos</h2>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #121212;
+        margin: 0;
+        padding: 0;
+        color: #ffffff;
+    }
 
-<form method="POST">
-    <!-- Filtro por Fecha -->
-    <label>Seleccionar Fecha:</label>
-    <input type="date" name="fecha_cliente" value="{{ fecha_seleccionada or '' }}">
+    h1,
+    h2 {
+        text-align: center;
+        color: #ffffff;
+    }
 
-    <!-- Filtro por Estado -->
-    <label>Seleccionar Estado:</label>
-    <select name="estado_pago">
-        <option value="">Todos</option>
-        <option value="Pendiente" {% if estado_seleccionado == 'Pendiente' %}selected{% endif %}>Pendiente</option>
-        <option value="Pagado" {% if estado_seleccionado == 'Pagado' %}selected{% endif %}>Pagado</option>
-    </select>
+    h3 {
+        color: #f0d8c0;
+        text-align: center;
+    }
 
-    <button type="submit">Filtrar</button>
-</form>
+    form {
+        background: #222;
+        color: #ddd;
+        padding: 20px;
+        border-radius: 10px;
+        max-width: 500px;
+        margin: 20px auto;
+        box-shadow: 0px 0px 10px rgba(255, 204, 0, 0.2);
+    }
 
-<!-- Mostrar los pagos filtrados -->
-{% if pagos_tarjetas or pagos_inscripciones %}
-<h3>Pagos Filtrados</h3>
+    label {
+        display: block;
+        margin-bottom: 5px;
+    }
 
-<!-- Pagos de Tarjetas -->
-{% if pagos_tarjetas %}
-<h4>Pagos de Tarjetas</h4>
-<table border="1">
-    <thead>
-        <tr>
-            <th>Jugador</th>
-            <th>Categoría</th>
-            <th>Tarjetas Rojas</th>
-            <th>Tarjetas Amarillas</th>
-            <th>Valor Total</th>
-            <th>Observaciones</th>
-            <th>Método de Pago</th>
-            <th>Fecha de Pago</th>
-            <th>Estado</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for pago in pagos_tarjetas %}
-        <tr>
-            <td>{{ pago.jugador }}</td>
-            <td>{{ pago.categoria }}</td>
-            <td>{{ pago.tarjetas_rojas }}</td>
-            <td>{{ pago.tarjetas_amarillas }}</td>
-            <td>${{ pago.valor_total_pagar }}</td>
-            <td>{{ pago.observaciones }}</td>
-            <td>{{ pago.metodo_pago }}</td>
-            <td>{{ pago.fecha_cobro }}</td>
-            <td>{{ pago.estado_pago }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% endif %}
+    input[type="text"],
+    input[type="date"],
+    input[type="number"],
+    select,
+    textarea {
+        width: 100%;
+        padding: 8px;
+        margin-bottom: 10px;
+        border-radius: 5px;
+        border: 1px solid #555;
+        background-color: #444;
+        color: #ddd;
+        box-sizing: border-box;
+    }
 
-<!-- Pagos de Inscripciones -->
-{% if pagos_inscripciones %}
-<h4>Pagos de Inscripciones</h4>
-<table border="1">
-    <thead>
-        <tr>
-            <th>Jugador/Equipo</th>
-            <th>Categoría</th>
-            <th>Monto a Cobrar</th>
-            <th>Observaciones</th>
-            <th>Método de Pago</th>
-            <th>Fecha de Pago</th>
-            <th>Estado</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for pago in pagos_inscripciones %}
-        <tr>
-            <td>{{ pago.jugador or pago.equipo }}</td>
-            <td>{{ pago.categoria }}</td>
-            <td>${{ pago.monto_a_cobrar }}</td>
-            <td>{{ pago.observaciones }}</td>
-            <td>{{ pago.metodo_pago }}</td>
-            <td>{{ pago.fecha_inscripcion }}</td>
-            <td>{{ pago.estado_pago }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% endif %}
-{% else %}
-<p>No se encontraron pagos con los filtros seleccionados.</p>
-{% endif %}
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #333;
+        color: #ddd;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 20px;
+        cursor: pointer; /* Cambiar el cursor al pasar por encima */
+    }
+
+    th,
+    td {
+        padding: 12px;
+        border: 1px solid #555;
+        text-align: left;
+    }
+
+    th {
+        background: #555;
+        color: #eee;
+        text-align: center;
+    }
+
+    tbody tr:nth-child(even) {
+        background-color: #444;
+    }
+
+    button {
+        background: #f0c987;
+        color: #333;
+        border: none;
+        padding: 12px 20px;
+        cursor: pointer;
+        border-radius: 5px;
+        font-weight: bold;
+        transition: background 0.3s;
+        display: inline-block;
+        margin: 5px;
+    }
+
+    button:hover {
+        background: #e0b26c;
+    }
+
+    .container {
+        width: 95%;
+        max-width: 1200px;
+        margin: auto;
+        overflow: hidden;
+        padding: 20px;
+    }
+
+    /* Estilos para tablas despegables */
+    .table-container {
+        position: relative;
+    }
+
+    .table-preview {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        color: #fff;
+        display: none;
+        padding: 20px;
+        box-sizing: border-box;
+        border-radius: 10px;
+        z-index: 10;
+        overflow: auto; /* Agregado para contenido largo */
+    }
+
+    .table-preview h4 {
+        color: #fff;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+
+    .table-preview p {
+        margin-bottom: 5px;
+    }
+
+    .table-preview-close {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        cursor: pointer;
+        color: #fff;
+    }
+
+    /* Estilos para modales eliminados */
+    /* Eliminado el estilo para #editar-modal-tarjeta y #editar-modal-inscripcion */
+
+    /* Eliminar el overlay */
+    .modal-overlay {
+        display: none !important;
+    }
+</style>
+
+<div class="container">
+
+    <h1>Filtrar Pagos</h1>
+
+    <!-- Formulario para filtrar pagos -->
+    <form method="POST">
+        <label for="fecha_cliente">Seleccionar Fecha:</label>
+        <input type="date" id="fecha_cliente" name="fecha_cliente" value="{{ fecha_seleccionada or '' }}" />
+
+        <label for="estado_pago">Seleccionar Estado:</label>
+        <select id="estado_pago" name="estado_pago">
+            <option value="">Todos</option>
+            <option value="Pendiente" {% if estado_seleccionado=='Pendiente' %}selected{% endif %}>Pendiente</option>
+            <option value="Pagado" {% if estado_seleccionado=='Pagado' %}selected{% endif %}>Pagado</option>
+        </select>
+
+        <button type="submit">Filtrar</button>
+    </form>
+
+    <!-- Mostrar resultados filtrados -->
+    {% if pagos_tarjetas or pagos_inscripciones %}
+    <h2>Pagos Filtrados</h2>
+
+    <!-- Pagos de tarjetas -->
+    {% if pagos_tarjetas %}
+    <h3>Pagos de Tarjetas</h3>
+    <div class="table-container">
+        <table border="1" id="tabla-tarjetas">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Jugador</th>
+                    <th>Categoría</th>
+                    <th>Tarjetas Rojas</th>
+                    <th>Tarjetas Amarillas</th>
+                    <th>Valor Total</th>
+                    <th>Observaciones</th>
+                    <th>Método de Pago</th>
+                    <th>Fecha de Pago</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pago in pagos_tarjetas %}
+                <tr>
+                    <td>{{ pago.id_pago }}</td>
+                    <td>{{ pago.jugador }}</td>
+                    <td>{{ pago.categoria }}</td>
+                    <td>{{ pago.tarjetas_rojas }}</td>
+                    <td>{{ pago.tarjetas_amarillas }}</td>
+                    <td>${{ pago.valor_total_pagar }}</td>
+                    <td>{{ pago.observaciones }}</td>
+                    <td>{{ pago.metodo_pago }}</td>
+                    <td>{{ pago.fecha_cobro }}</td>
+                    <td>{{ pago.estado_pago }}</td>
+                    <td>
+                        <!-- Botón para eliminar pagos de tarjetas -->
+                        <button onclick="eliminarPago('{{ pago.id_pago }}', 'tarjeta')">Eliminar</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="table-preview" id="tabla-tarjetas-preview">
+            <h4>Vista Previa de Pago de Tarjeta</h4>
+            <span class="table-preview-close">×</span>
+            <p><strong>ID:</strong> <span id="preview-id"></span></p>
+            <p><strong>Jugador:</strong> <span id="preview-jugador"></span></p>
+            <p><strong>Categoría:</strong> <span id="preview-categoria"></span></p>
+            <p><strong>Tarjetas Rojas:</strong> <span id="preview-tarjetas-rojas"></span></p>
+            <p><strong>Tarjetas Amarillas:</strong> <span id="preview-tarjetas-amarillas"></span></p>
+            <p><strong>Valor Total:</strong> <span id="preview-valor-total"></span></p>
+            <p><strong>Observaciones:</strong> <span id="preview-observaciones"></span></p>
+            <p><strong>Método de Pago:</strong> <span id="preview-metodo-pago"></span></p>
+            <p><strong>Fecha de Pago:</strong> <span id="preview-fecha-pago"></span></p>
+            <p><strong>Estado:</strong> <span id="preview-estado"></span></p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Pagos de inscripciones -->
+    {% if pagos_inscripciones %}
+    <h3>Pagos de Inscripciones</h3>
+    <div class="table-container">
+        <table border="1" id="tabla-inscripciones">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Jugador/Equipo</th>
+                    <th>Categoría</th>
+                    <th>Monto a Cobrar</th>
+                    <th>Observaciones</th>
+                    <th>Método de Pago</th>
+                    <th>Fecha de Inscripción</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pago in pagos_inscripciones %}
+                <tr>
+                    <td>{{ pago.id_inscripcion }}</td>
+                    <td>{{ pago.jugador or pago.nombre_equipo }}</td>
+                    <td>{{ pago.categoria }}</td>
+                    <td>${{ pago.monto_a_cobrar }}</td>
+                    <td>{{ pago.observaciones }}</td>
+                    <td>{{ pago.metodo_pago }}</td>
+                    <td>{{ pago.fecha_inscripcion }}</td>
+                    <td>{{ pago.estado_pago }}</td>
+                    <td>
+                        <!-- Botón para eliminar pagos de inscripciones -->
+                        <button onclick="eliminarPago('{{ pago.id_inscripcion }}', 'inscripcion')">Eliminar</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="table-preview" id="tabla-inscripciones-preview">
+            <h4>Vista Previa de Pago de Inscripción</h4>
+            <span class="table-preview-close">×</span>
+            <p><strong>ID:</strong> <span id="preview-id-inscripcion"></span></p>
+            <p><strong>Jugador/Equipo:</strong> <span id="preview-jugador-equipo"></span></p>
+            <p><strong>Categoría:</strong> <span id="preview-categoria-inscripcion"></span></p>
+            <p><strong>Monto a Cobrar:</strong> <span id="preview-monto-cobrar"></span></p>
+            <p><strong>Observaciones:</strong> <span id="preview-observaciones-inscripcion"></span></p>
+            <p><strong>Método de Pago:</strong> <span id="preview-metodo-pago-inscripcion"></span></p>
+            <p><strong>Fecha de Inscripción:</strong> <span id="preview-fecha-inscripcion"></span></p>
+            <p><strong>Estado:</strong> <span id="preview-estado-inscripcion"></span></p>
+        </div>
+    </div>
+    {% endif %} {% else %}
+    <p>No se encontraron pagos con los filtros seleccionados.</p>
+    {% endif %}
+</div>
+
+{% endblock %} {% block scripts %}
+<script>
+    // JavaScript para mostrar/ocultar la vista previa de la tabla
+    document.querySelectorAll(".table-container table").forEach((table) => {
+        table.addEventListener("click", (event) => {
+            const tableId = table.id;
+            const previewId = tableId + "-preview";
+            const preview = document.getElementById(previewId);
+             if (preview) {
+
+                  // Cargar datos en la vista previa
+                if (tableId === "tabla-tarjetas") {
+                    const row = event.target.closest("tr");
+                     if (row) {
+                    document.getElementById("preview-id").textContent = row.cells[0].textContent;
+                    document.getElementById("preview-jugador").textContent = row.cells[1].textContent;
+                    document.getElementById("preview-categoria").textContent = row.cells[2].textContent;
+                    document.getElementById("preview-tarjetas-rojas").textContent = row.cells[3].textContent;
+                    document.getElementById("preview-tarjetas-amarillas").textContent = row.cells[4].textContent;
+                    document.getElementById("preview-valor-total").textContent = row.cells[5].textContent;
+                    document.getElementById("preview-observaciones").textContent = row.cells[6].textContent;
+                    document.getElementById("preview-metodo-pago").textContent = row.cells[7].textContent;
+                    document.getElementById("preview-fecha-pago").textContent = row.cells[8].textContent;
+                    document.getElementById("preview-estado").textContent = row.cells[9].textContent;
+                    }
+                } else if (tableId === "tabla-inscripciones") {
+                    const row = event.target.closest("tr");
+                     if (row) {
+                        document.getElementById("preview-id-inscripcion").textContent = row.cells[0].textContent;
+                        document.getElementById("preview-jugador-equipo").textContent = row.cells[1].textContent;
+                        document.getElementById("preview-categoria-inscripcion").textContent = row.cells[2].textContent;
+                        document.getElementById("preview-monto-cobrar").textContent = row.cells[3].textContent;
+                        document.getElementById("preview-observaciones-inscripcion").textContent = row.cells[4].textContent;
+                        document.getElementById("preview-metodo-pago-inscripcion").textContent = row.cells[5].textContent;
+                        document.getElementById("preview-fecha-inscripcion").textContent = row.cells[6].textContent;
+                        document.getElementById("preview-estado-inscripcion").textContent = row.cells[7].textContent;
+                    }
+                }
+
+                preview.style.display = "block";
+             }
+        });
+    });
+
+    // Cerrar la vista previa
+    document.querySelectorAll(".table-preview-close").forEach((closeButton) => {
+        closeButton.addEventListener("click", (event) => {
+            event.stopPropagation();
+            const preview = closeButton.closest(".table-preview");
+             if (preview) {
+                preview.style.display = "none";
+             }
+        });
+    });
+
+    // Evitar que el clic en la vista previa se propague a la tabla subyacente
+    document.querySelectorAll(".table-preview").forEach((preview) => {
+        preview.addEventListener("click", (event) => {
+            event.stopPropagation();
+        });
+    });
+
+    // Función para eliminar un registro
+    function eliminarPago(id, tipo) {
+        if (confirm("¿Estás seguro de eliminar este registro?")) {
+            fetch(`/eliminar_registro?id=${encodeURIComponent(id)}&tipo=${encodeURIComponent(tipo)}`, {
+                    method: "DELETE",
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("Registro eliminado correctamente.");
+                        window.location.reload(); // Recargar la página
+                    } else {
+                        alert("Error al eliminar el registro.");
+                    }
+                })
+                .catch(error => console.error("Error:", error));
+        }
+    }
+</script>
 {% endblock %}

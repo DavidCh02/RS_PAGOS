@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 {% block content %}
 <!DOCTYPE html>
@@ -190,38 +191,39 @@
     {% endfor %}
     {% endif %}
     <!-- Pagos de Inscripciones -->
-    {% if pagos.inscripciones %}
-    <h4>Pagos de Inscripciones</h4>
-    {% for pago in pagos.inscripciones %}
-    <div class="payment-inscription">
-        <div class="payment-header" data-id="inscripcion-{{ dia }}-{{ loop.index }}">
-            <h4>{{ pago.nombre_equipo or "-" }} - {{ pago.jugador or "-" }} - ${{ pago.monto_a_cobrar }}</h4>
-            <button id="btn-inscripcion-{{ dia }}-{{ loop.index }}">+</button>
-        </div>
-        <div class="payment-details" id="inscripcion-{{ dia }}-{{ loop.index }}">
-            <p><strong>Categoría:</strong> {{ pago.categoria }}</p>
-            <p><strong>Jugador:</strong> {{ pago.jugador or "Sin jugador" }}</p>
-            <p><strong>Observaciones:</strong> {{ pago.observaciones }}</p>
-            <p><strong>Método de Pago:</strong> {{ pago.metodo_pago }}</p>
-            <form method="POST" style="display:inline;">
-                <input type="hidden" name="id_pago" value="{{ pago.id_inscripcion }}">
-                <input type="hidden" name="tipo_pago" value="inscripcion">
-                <label>Método:</label>
-                <select name="metodo_pago">
-                    <option value="Efectivo">Efectivo</option>
-                    <option value="Transferencia">Transferencia</option>
-                </select>
-                <label>Estado:</label>
-                <select name="estado_pago">
-                    <option value="Pendiente">Pendiente</option>
-                    <option value="Pagado">Pagado</option>
-                </select>
-                <button type="submit" name="actualizar_pago">Actualizar</button>
-            </form>
-        </div>
+{% if pagos.inscripciones %}
+<h4>Pagos de Inscripciones</h4>
+{% for pago in pagos.inscripciones %}
+<div class="payment-inscription">
+    <div class="payment-header" data-id="inscripcion-{{ dia }}-{{ loop.index }}">
+        <!-- Modificación aquí: se agrega la categoría -->
+        <h4>{{ pago.nombre_equipo or "-" }} - {{ pago.categoria }} - {{ pago.jugador or "-" }} - ${{ pago.monto_a_cobrar }}</h4>
+        <button id="btn-inscripcion-{{ dia }}-{{ loop.index }}">+</button>
     </div>
-    {% endfor %}
-    {% endif %}
+    <div class="payment-details" id="inscripcion-{{ dia }}-{{ loop.index }}">
+        <p><strong>Categoría:</strong> {{ pago.categoria }}</p>
+        <p><strong>Jugador:</strong> {{ pago.jugador or "Sin jugador" }}</p>
+        <p><strong>Observaciones:</strong> {{ pago.observaciones }}</p>
+        <p><strong>Método de Pago:</strong> {{ pago.metodo_pago }}</p>
+        <form method="POST" style="display:inline;">
+            <input type="hidden" name="id_pago" value="{{ pago.id_inscripcion }}">
+            <input type="hidden" name="tipo_pago" value="inscripcion">
+            <label>Método:</label>
+            <select name="metodo_pago">
+                <option value="Efectivo">Efectivo</option>
+                <option value="Transferencia">Transferencia</option>
+            </select>
+            <label>Estado:</label>
+            <select name="estado_pago">
+                <option value="Pendiente">Pendiente</option>
+                <option value="Pagado">Pagado</option>
+            </select>
+            <button type="submit" name="actualizar_pago">Actualizar</button>
+        </form>
+    </div>
+</div>
+{% endfor %}
+{% endif %}
     {% endfor %}
     <!-- Enlace a pagos realizados esta semana -->
     <a href="{{ url_for('pagados_hoy') }}">Ver Pagos Realizados Esta Semana</a>
