@@ -160,19 +160,66 @@
     <h1>Filtrar Pagos</h1>
 
     <!-- Formulario para filtrar pagos -->
-    <form method="POST">
-        <label for="fecha_cliente">Seleccionar Fecha:</label>
-        <input type="date" id="fecha_cliente" name="fecha_cliente" value="{{ fecha_seleccionada or '' }}" />
+    <form method="POST" class="filter-form">
+        <div class="form-group">
+            <label>Tipo de búsqueda:</label>
+            <select id="tipo_busqueda" name="tipo_busqueda" class="form-control">
+                <option value="fecha">Por fecha</option>
+                <option value="partido">Por número de partido</option>
+            </select>
+        </div>
 
-        <label for="estado_pago">Seleccionar Estado:</label>
-        <select id="estado_pago" name="estado_pago">
-            <option value="">Todos</option>
-            <option value="Pendiente" {% if estado_seleccionado=='Pendiente' %}selected{% endif %}>Pendiente</option>
-            <option value="Pagado" {% if estado_seleccionado=='Pagado' %}selected{% endif %}>Pagado</option>
-        </select>
+        <div id="busqueda_fecha" class="form-group">
+            <label for="fecha_cliente">Fecha:</label>
+            <input type="date" name="fecha_cliente" class="form-control">
+        </div>
 
-        <button type="submit">Filtrar</button>
+        <div id="busqueda_partido" class="form-group" style="display: none;">
+            <label for="numero_partido">Número de Partido:</label>
+            <select name="numero_partido" class="form-control">
+                <option value="">Seleccione el número de partido</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="Octavos de final">Octavos de final</option>
+                <option value="Cuartos de final">Cuartos de final</option>
+                <option value="Semi final">Semi final</option>
+                <option value="Final">Final</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="estado_pago">Estado del pago:</label>
+            <select name="estado_pago" class="form-control">
+                <option value="">Todos</option>
+                <option value="Pendiente">Pendiente</option>
+                <option value="Pagado">Pagado</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Filtrar</button>
     </form>
+
+    <script>
+    document.getElementById('tipo_busqueda').addEventListener('change', function() {
+        const busquedaFecha = document.getElementById('busqueda_fecha');
+        const busquedaPartido = document.getElementById('busqueda_partido');
+        
+        if (this.value === 'fecha') {
+            busquedaFecha.style.display = 'block';
+            busquedaPartido.style.display = 'none';
+        } else {
+            busquedaFecha.style.display = 'none';
+            busquedaPartido.style.display = 'block';
+        }
+    });
+    </script>
 
     <!-- Mostrar resultados filtrados -->
     {% if pagos_tarjetas or pagos_inscripciones %}
@@ -185,7 +232,7 @@
         <table border="1" id="tabla-tarjetas">
             <thead>
                 <tr>
-                    <th>ID</th>
+                    <th>Equipo</th>
                     <th>Jugador</th>
                     <th>Categoría</th>
                     <th>Tarjetas Rojas</th>
@@ -201,7 +248,7 @@
             <tbody>
                 {% for pago in pagos_tarjetas %}
                 <tr>
-                    <td>{{ pago.id_pago }}</td>
+                    <td>{{ pago.nombre_equipo }}</td>
                     <td>{{ pago.jugador }}</td>
                     <td>{{ pago.categoria }}</td>
                     <td>{{ pago.tarjetas_rojas }}</td>

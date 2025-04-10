@@ -118,7 +118,25 @@
         <input type="text" name="nuevo_equipo" id="nuevo_equipo_tarjeta" placeholder="O ingresar nuevo equipo" style="display: none;">
         <br>
         <label>Número de Partido Jugado:</label>
-        <input type="number" name="numero_partido_jugado" required><br>
+        <div class="form-group">
+            <label for="numero_partido_jugado">Número de Partido:</label>
+            <select name="numero_partido_jugado" id="numero_partido_jugado" class="form-control" required>
+                <option value="">Seleccione el número de partido</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="Octavos de final">Octavos de final</option>
+                <option value="Cuartos de final">Cuartos de final</option>
+                <option value="Semi final">Semi final</option>
+                <option value="Final">Final</option>
+            </select>
+        </div>
         <label>Fecha de Cobro:</label>
         <input type="date" name="fecha_cobro" required><br>
         <label>Jugador:</label>
@@ -130,9 +148,9 @@
             <option value="Femenina">Femenina</option>
         </select><br>
         <label>Tarjetas Rojas:</label>
-        <input type="number" name="tarjetas_rojas" required><br>
+        <input type="number" name="tarjetas_rojas" required min="0">
         <label>Tarjetas Amarillas:</label>
-        <input type="number" name="tarjetas_amarillas" required><br>
+        <input type="number" name="tarjetas_amarillas" required min="0">
         <label>Observaciones:</label>
         <textarea name="observaciones"></textarea><br>
         <button type="button" onclick="enviarFormulario('form-tarjetas')">Agregar</button>

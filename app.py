@@ -14,7 +14,7 @@ if __name__ == '__main__':
         app.run(debug=True)
 
 # Configuración de la base de datos
-DATABASE_URL = "postgresql://rs_pagos_user:XnBxCpRwG7C4Cb6jKIzZ2Wta3NJoOdfI@dpg-cvrlids9c44c73d6113g-a.oregon-postgres.render.com/rs_pagos"
+DATABASE_URL = "postgresql+pg8000://rs_pagos_user:XnBxCpRwG7C4Cb6jKIzZ2Wta3NJoOdfI@dpg-cvrlids9c44c73d6113g-a.oregon-postgres.render.com/rs_pagos"
 engine = create_engine(DATABASE_URL)
 
 # Función auxiliar para obtener una conexión a la base de datos
@@ -94,7 +94,7 @@ def admin():
 
             # Agregar pago de tarjetas
             elif 'agregar_tarjeta' in request.form:
-                numero_partido_jugado = int(request.form['numero_partido_jugado'])
+                numero_partido_jugado = request.form['numero_partido_jugado']  # Remove the int() conversion
                 fecha_cobro = request.form['fecha_cobro']
                 jugador = request.form['jugador']
                 categoria = request.form['categoria']
@@ -301,18 +301,25 @@ def pagados_hoy():
 
     conn = get_db_connection()
     try:
-        # Consultar pagos realizados en la semana actual
+        # Consultar pagos realizados en la semana actual (Tarjetas)
         result_tarjetas = conn.execute(text("""
-            SELECT *, fecha_cobro AT TIME ZONE 'UTC' AT TIME ZONE :timezone AS fecha_cobro_local
-            FROM pago_tarjetas
-            WHERE estado_pago = 'Pagado' AND fecha_cobro BETWEEN :start_of_week AND :end_of_week
+            SELECT pt.*, 
+                   ep.nombre_equipo, 
+                   fecha_cobro AT TIME ZONE 'UTC' AT TIME ZONE :timezone AS fecha_cobro_local
+            FROM pago_tarjetas pt
+            LEFT JOIN equipo_pagos ep ON pt.id_equipo = ep.id_equipo
+            WHERE pt.estado_pago = 'Pagado' AND pt.fecha_cobro BETWEEN :start_of_week AND :end_of_week
         """), {"start_of_week": start_of_week, "end_of_week": end_of_week, "timezone": timezone.zone})
         pagos_tarjetas = result_tarjetas.fetchall()
 
+        # Consultar pagos realizados en la semana actual (Inscripciones)
         result_inscripciones = conn.execute(text("""
-            SELECT *, fecha_inscripcion AT TIME ZONE 'UTC' AT TIME ZONE :timezone AS fecha_inscripcion_local
-            FROM pago_inscripcion
-            WHERE estado_pago = 'Pagado' AND fecha_inscripcion BETWEEN :start_of_week AND :end_of_week
+            SELECT pi.*, 
+                   ep.nombre_equipo, 
+                   fecha_inscripcion AT TIME ZONE 'UTC' AT TIME ZONE :timezone AS fecha_inscripcion_local
+            FROM pago_inscripcion pi
+            LEFT JOIN equipo_pagos ep ON pi.id_equipo = ep.id_equipo
+            WHERE pi.estado_pago = 'Pagado' AND pi.fecha_inscripcion BETWEEN :start_of_week AND :end_of_week
         """), {"start_of_week": start_of_week, "end_of_week": end_of_week, "timezone": timezone.zone})
         pagos_inscripciones = result_inscripciones.fetchall()
 
@@ -365,51 +372,60 @@ def pagados_hoy():
 @app.route('/filtrar_pagos', methods=['GET', 'POST'])
 def filtrar_pagos():
     fecha_seleccionada = None
+    numero_partido = None
     estado_seleccionado = None
     pagos_tarjetas = []
     pagos_inscripciones = []
     conn = get_db_connection()
     try:
         if request.method == 'POST':
-            # Obtener la fecha y el estado seleccionados
-            fecha_seleccionada = request.form.get('fecha_cliente')
+            tipo_busqueda = request.form.get('tipo_busqueda')
             estado_seleccionado = request.form.get('estado_pago')
 
-            # Consultar pagos de tarjetas según los filtros
+            # Base queries
             query_tarjetas = """
-            SELECT pt.*, ep.nombre_equipo
-            FROM pago_tarjetas pt
-            LEFT JOIN equipo_pagos ep ON pt.id_equipo = ep.id_equipo
-            WHERE 1=1
+                SELECT pt.*, 
+                       ep.nombre_equipo  -- Agregamos explícitamente el nombre del equipo
+                FROM pago_tarjetas pt
+                LEFT JOIN equipo_pagos ep ON pt.id_equipo = ep.id_equipo
+                WHERE 1=1
             """
+            query_inscripciones = """
+                SELECT pi.*, 
+                       ep.nombre_equipo  -- Agregamos explícitamente el nombre del equipo
+                FROM pago_inscripcion pi
+                LEFT JOIN equipo_pagos ep ON pi.id_equipo = ep.id_equipo
+                WHERE 1=1
+            """
+            
             params_tarjetas = {}
-            if fecha_seleccionada:
-                query_tarjetas += " AND pt.fecha_cobro = :fecha"
-                params_tarjetas["fecha"] = fecha_seleccionada
+            params_inscripciones = {}
+
+            if tipo_busqueda == 'fecha':
+                fecha_seleccionada = request.form.get('fecha_cliente')
+                if fecha_seleccionada:
+                    query_tarjetas += " AND pt.fecha_cobro = :fecha"
+                    query_inscripciones += " AND pi.fecha_inscripcion = :fecha"
+                    params_tarjetas["fecha"] = fecha_seleccionada
+                    params_inscripciones["fecha"] = fecha_seleccionada
+            else:
+                numero_partido = request.form.get('numero_partido')
+                if numero_partido:
+                    query_tarjetas += " AND pt.numero_partido_jugado = :numero_partido"
+                    params_tarjetas["numero_partido"] = numero_partido
+
             if estado_seleccionado:
                 query_tarjetas += " AND pt.estado_pago = :estado_pago"
+                query_inscripciones += " AND pi.estado_pago = :estado_pago"
                 params_tarjetas["estado_pago"] = estado_seleccionado
+                params_inscripciones["estado_pago"] = estado_seleccionado
 
             result_tarjetas = conn.execute(text(query_tarjetas), params_tarjetas)
             pagos_tarjetas = result_tarjetas.fetchall()
 
-            # Consultar pagos de inscripción según los filtros
-            query_inscripciones = """
-            SELECT pi.*, ep.nombre_equipo
-            FROM pago_inscripcion pi
-            LEFT JOIN equipo_pagos ep ON pi.id_equipo = ep.id_equipo
-            WHERE 1=1
-            """
-            params_inscripciones = {}
-            if fecha_seleccionada:
-                query_inscripciones += " AND pi.fecha_inscripcion = :fecha"
-                params_inscripciones["fecha"] = fecha_seleccionada
-            if estado_seleccionado:
-                query_inscripciones += " AND pi.estado_pago = :estado_pago"
-                params_inscripciones["estado_pago"] = estado_seleccionado
-
-            result_inscripciones = conn.execute(text(query_inscripciones), params_inscripciones)
-            pagos_inscripciones = result_inscripciones.fetchall()
+            if tipo_busqueda == 'fecha':
+                result_inscripciones = conn.execute(text(query_inscripciones), params_inscripciones)
+                pagos_inscripciones = result_inscripciones.fetchall()
 
     finally:
         conn.close()
@@ -419,6 +435,7 @@ def filtrar_pagos():
         pagos_tarjetas=pagos_tarjetas,
         pagos_inscripciones=pagos_inscripciones,
         fecha_seleccionada=fecha_seleccionada,
+        numero_partido=numero_partido,
         estado_seleccionado=estado_seleccionado
     )
 if __name__ == '__main__':
@@ -577,3 +594,116 @@ def editar_registro():
         return jsonify({"success": False, "message": str(e)})
     finally:
         conn.close()
+
+
+@app.route('/reporte_semanal')
+def reporte_semanal():
+    # Obtener parámetros de la solicitud
+    partido_seleccionado = request.args.get('partido', '1')  # Valor por defecto "Partido 1"
+    timezone = pytz.timezone('UTC')
+
+    # Calcular semana actual por defecto
+    today_utc = datetime.now(timezone).date()
+    start_of_week = today_utc - timedelta(days=today_utc.weekday())
+    end_of_week = start_of_week + timedelta(days=6)
+
+    # Si hay partido seleccionado, obtener fechas asociadas
+    if partido_seleccionado != 'custom':
+        conn = get_db_connection()
+        try:
+            result = conn.execute(text("""
+                SELECT MIN(fecha_cobro) as inicio, MAX(fecha_cobro) as fin
+                FROM pago_tarjetas 
+                WHERE numero_partido_jugado = :partido
+            """), {"partido": partido_seleccionado})
+
+            fechas_partido = result.fetchone()
+            if fechas_partido and fechas_partido.inicio:
+                start_of_week = fechas_partido.inicio  # Ya es un objeto date
+                end_of_week = fechas_partido.fin + timedelta(days=6)  # Ya es un objeto date
+        finally:
+            conn.close()
+
+    # Consultar pagos de tarjetas e inscripciones
+    conn = get_db_connection()
+    try:
+        # Tarjetas
+        query_tarjetas = """
+            
+        SELECT pt.*, ep.nombre_equipo
+                    FROM pago_tarjetas pt
+                    LEFT JOIN equipo_pagos ep ON pt.id_equipo = ep.id_equipo
+                    WHERE pt.numero_partido_jugado = :partido
+                """
+        result_tarjetas = conn.execute(text(query_tarjetas), {"partido": partido_seleccionado})
+        tarjetas = result_tarjetas.fetchall()
+
+        # Inscripciones
+        query_inscripciones = """
+            SELECT pi.*, ep.nombre_equipo
+            FROM pago_inscripcion pi
+            LEFT JOIN equipo_pagos ep ON pi.id_equipo = ep.id_equipo
+            WHERE pi.fecha_inscripcion BETWEEN :start AND :end
+        """
+        result_inscripciones = conn.execute(text(query_inscripciones),
+                                            {"start": start_of_week, "end": end_of_week})
+        inscripciones = result_inscripciones.fetchall()
+
+    finally:
+        conn.close()
+
+    # Calcular totales
+    total_tarjetas_pendientes = sum(
+        (t.tarjetas_rojas * 4 + t.tarjetas_amarillas * 2)
+        for t in tarjetas if t.estado_pago == 'Pendiente'
+    )
+    total_inscripciones_pendientes = sum(
+        i.monto_a_cobrar for i in inscripciones if i.estado_pago == 'Pendiente'
+    )
+
+    total_tarjetas_pagadas = sum(
+        (t.tarjetas_rojas * 4 + t.tarjetas_amarillas * 2)
+        for t in tarjetas if t.estado_pago == 'Pagado'
+    )
+    total_inscripciones_pagadas = sum(
+        i.monto_a_cobrar for i in inscripciones if i.estado_pago == 'Pagado'
+    )
+
+    total_general_pendientes = total_tarjetas_pendientes + total_inscripciones_pendientes
+    total_general_pagadas = total_tarjetas_pagadas + total_inscripciones_pagadas
+    total_general = total_general_pendientes + total_general_pagadas
+
+    # Agrupar pagos por día de la semana
+    def get_nombre_dia(fecha):
+        # Mapeo de números de días a nombres
+        dias_semana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+        return dias_semana[fecha.weekday()]
+
+    pagos_por_dia = {}
+    for pago in tarjetas + inscripciones:
+        fecha = getattr(pago, 'fecha_cobro', None) or getattr(pago, 'fecha_inscripcion', None)
+        if fecha:
+            dia_nombre = get_nombre_dia(fecha)
+            if dia_nombre not in pagos_por_dia:
+                pagos_por_dia[dia_nombre] = {
+                    'tarjetas': [],
+                    'inscripciones': []
+                }
+            if hasattr(pago, 'tarjetas_rojas'):
+                pagos_por_dia[dia_nombre]['tarjetas'].append(pago)
+            else:
+                pagos_por_dia[dia_nombre]['inscripciones'].append(pago)
+
+    return render_template('reporte_semanal.html',
+                           partido_seleccionado=partido_seleccionado,
+                           start_of_week=start_of_week,
+                           end_of_week=end_of_week,
+                           pagos_por_dia=pagos_por_dia,
+                           total_tarjetas_pendientes=total_tarjetas_pendientes,
+                           total_inscripciones_pendientes=total_inscripciones_pendientes,
+                           total_tarjetas_pagadas=total_tarjetas_pagadas,
+                           total_inscripciones_pagadas=total_inscripciones_pagadas,
+                           total_general_pendientes=total_general_pendientes,
+                           total_general_pagadas=total_general_pagadas,
+                           total_general=total_general
+                           )

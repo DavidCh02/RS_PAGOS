@@ -83,6 +83,7 @@
     <table border="1">
         <thead>
             <tr>
+                <th>Equipo</th>
                 <th>Jugador</th>
                 <th>Categoría</th>
                 <th>Tarjetas Rojas</th>
@@ -96,6 +97,7 @@
         <tbody>
             {% for pago in pagos.tarjetas %}
             <tr>
+                <td>{{ pago.nombre_equipo or '-' }}</td>
                 <td>{{ pago.jugador }}</td>
                 <td>{{ pago.categoria }}</td>
                 <td>{{ pago.tarjetas_rojas }}</td>

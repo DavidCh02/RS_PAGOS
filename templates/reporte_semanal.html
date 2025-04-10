@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* Estilos generales */
+    body {
+        font-family: Arial, sans-serif;
+        background: white;
+        color: #333;
+        margin: 20px;
+        line-height: 1.6; /* Mejora la legibilidad */
+    }
+
+    /* Contenedor principal */
+    .report-container {
+        max-width: 900px; /* Ancho óptimo para web */
+        margin: 0 auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        background-color: #fff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra ligera para mejor aspecto */
+        font-size: 14px; /* Tamaño de fuente más grande para web */
+    }
+
+    @media print {
+        .report-container {
+            max-width: 100%; /* Ocupa todo el ancho en el PDF */
+            padding: 10px; /* Menos padding para el PDF */
+            font-size: 12px; /* Tamaño de fuente más pequeño para PDF */
+            margin-top: 0 !important; /* Eliminar espacio en blanco superior */
+            box-shadow: none; /* Quitar sombra en el PDF */
+        }
+    }
+
+    /* Encabezados */
+    h1, h2, h3, h4 {
+        text-align: center;
+        color: #2c3e50;
+        margin-top: 15px;
+        margin-bottom: 10px;
+    }
+
+    h1 {
+        font-size: 24px; /* Tamaño grande para el título principal */
+    }
+
+    h2, h3, h4 {
+        font-size: 18px; /* Tamaño mediano para subtítulos */
+    }
+
+    /* Tablas */
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        font-size: 14px; /* Tamaño de fuente adecuado para tablas */
+    }
+
+    @media print {
+        table {
+            font-size: 12px; /* Tamaño más pequeño para tablas en PDF */
+        }
+    }
+
+    th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #2c96df;
+        color: white;
+        font-weight: bold;
+    }
+
+    tr.pendiente {
+        color: red;
+        font-weight: bold;
+    }
+
+    /* Sección de totales */
+    .total-section {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        font-size: 14px;
+    }
+
+    @media print {
+        .total-section {
+            font-size: 12px; /* Tamaño más pequeño para PDF */
+        }
+    }
+
+    /* Sección "Dinero dejado a" */
+    .signature-section {
+        margin-top: 20px;
+        padding: 10px;
+        font-size: 14px;
+        font-weight: bold;
+    }
+
+    @media print {
+        .signature-section {
+            font-size: 12px; /* Tamaño más pequeño para PDF */
+        }
+    }
+</style>
+
+<div class="report-container">
+    <h1>Reporte Semanal de Pagos</h1>
+    <p><strong>Semana del</strong> {{ start_of_week }} al {{ end_of_week }}</p>
+
+    <!-- Selector de partido -->
+    <div class="filters">
+        <select id="numero_partido" name="numero_partido">
+                <option value="">Seleccione el número de partido</option>
+                <option value="1" {% if partido_seleccionado == '1' %}selected{% endif %}>1</option>
+                <option value="2" {% if partido_seleccionado == '2' %}selected{% endif %}>2</option>
+                <option value="3" {% if partido_seleccionado == '3' %}selected{% endif %}>3</option>
+                <option value="4" {% if partido_seleccionado == '4' %}selected{% endif %}>4</option>
+                <option value="5" {% if partido_seleccionado == '5' %}selected{% endif %}>5</option>
+                <option value="6" {% if partido_seleccionado == '6' %}selected{% endif %}>6</option>
+                <option value="7" {% if partido_seleccionado == '7' %}selected{% endif %}>7</option>
+                <option value="8" {% if partido_seleccionado == '8' %}selected{% endif %}>8</option>
+                <option value="9" {% if partido_seleccionado == '9' %}selected{% endif %}>9</option>
+                <option value="Octavos de final" {% if partido_seleccionado == 'Octavos de final' %}selected{% endif %}>Octavos de final</option>
+                <option value="Cuartos de final" {% if partido_seleccionado == 'Cuartos de final' %}selected{% endif %}>Cuartos de final</option>
+                <option value="Semi final" {% if partido_seleccionado == 'Semi final' %}selected{% endif %}>Semi final</option>
+                <option value="Final" {% if partido_seleccionado == 'Final' %}selected{% endif %}>Final</option>
+        </select>
+        <button onclick="generatePDF()">Generar PDF</button>
+    </div>
+
+    <!-- Partido seleccionado -->
+    <h4>Partido Seleccionado: {{ partido_seleccionado }}</h4>
+
+    <!-- Pagos por día -->
+    {% for dia, pagos in pagos_por_dia.items() %}
+    <h3>{{ dia }}</h3>
+
+    <!-- Tarjetas -->
+    {% if pagos.tarjetas %}
+    <h4>Pagos de Tarjetas</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Jugador</th>
+                <th>Equipo</th>
+                <th>Categoría</th>
+                <th>Tarjetas</th>
+                <th>Monto</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for pago in pagos.tarjetas %}
+            <tr class="{{ 'pendiente' if pago.estado_pago != 'Pagado' }}">
+                <td>{{ pago.jugador }}</td>
+                <td>{{ pago.nombre_equipo or '-' }}</td>
+                <td>{{ pago.categoria }}</td>
+                <td>
+                    Rojas: {{ pago.tarjetas_rojas }}<br>
+                    Amarillas: {{ pago.tarjetas_amarillas }}
+                </td>
+                <td>${{ (pago.tarjetas_rojas * 4) + (pago.tarjetas_amarillas * 2) }}</td>
+                <td>{{ pago.estado_pago }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    <!-- Inscripciones -->
+    {% if pagos.inscripciones %}
+    <h4>Inscripciones</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>Jugador/Equipo</th>
+                <th>Equipo</th>
+                <th>Categoría</th>
+                <th>Monto</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for pago in pagos.inscripciones %}
+            <tr class="{{ 'pendiente' if pago.estado_pago != 'Pagado' }}">
+                <td>{{ pago.nombre_equipo or pago.jugador }}</td>
+                <td>{{ pago.nombre_equipo or '-' }}</td>
+                <td>{{ pago.categoria }}</td>
+                <td>${{ pago.monto_a_cobrar }}</td>
+                <td>{{ pago.estado_pago }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+    {% endfor %}
+
+    <!-- Totales -->
+    <div class="total-section">
+        <h4>Total a Pagar Esta Semana</h4>
+        <p><strong>Total Tarjetas Pendientes:</strong>
+            {% if total_tarjetas_pendientes > 0 %}
+                ${{ "%.2f"|format(total_tarjetas_pendientes) }}
+            {% else %}
+                <span style="color: green;">(Nada pendiente)</span>
+            {% endif %}
+        </p>
+        <p><strong>Total Inscripciones Pendientes:</strong>
+            {% if total_inscripciones_pendientes > 0 %}
+                ${{ "%.2f"|format(total_inscripciones_pendientes) }}
+            {% else %}
+                <span style="color: green;">(Nada pendiente)</span>
+            {% endif %}
+        </p>
+        <p><strong>Total General:</strong> ${{ "%.2f"|format(total_general) }}</p>
+
+        <!-- Dinero dejado a -->
+    <div class="signature-section">
+        <div class="form-group">
+            <label for="recibe">Dinero dejado a:</label>
+            <input type="text" id="recibe" name="recibe" style="width: 300px; padding: 8px;">
+        </div>
+    </div>
+    </div>
+
+
+</div>
+<script>
+// Script para manejar el cambio de partido
+document.getElementById('numero_partido').addEventListener('change', function() {
+    const partido = this.value;
+    window.location.href = `/reporte_semanal?partido=${encodeURIComponent(partido)}`;
+});
+
+function generatePDF() {
+  const recibeValue = document.getElementById('recibe').value;
+
+  // Agregar Dinero dejado a
+  const signatureSection = document.querySelector('.signature-section');
+  const recibeText = document.createElement('p');
+  recibeText.textContent = `Dinero dejado a: ${recibeValue || '(Sin especificar)'}`;
+  recibeText.style.fontWeight = 'bold';
+  signatureSection.innerHTML = '';
+  signatureSection.appendChild(recibeText);
+
+  setTimeout(() => {
+    const element = document.querySelector('.report-container');
+
+    const options = {
+      margin: [10, 5], // Márgenes más pequeños
+      filename: 'reporte_semanal.pdf',
+      image: { type: 'jpeg', quality: 0.8 },
+      html2canvas: {
+        scale: 2, // Escala óptima
+        dpi: 300,
+        letterRendering: true,
+        useCORS: true
+      },
+      jsPDF: {
+        unit: 'mm',
+        format: 'letter',
+        orientation: 'portrait',
+        compress: true
+      },
+      pagebreak: {
+        mode: ['avoid-all', 'css', 'legacy']
+      }
+    };
+
+    // Ajustar layout antes de generar PDF
+    element.style.padding = '10px';
+    element.style.fontSize = '12px';
+    element.querySelectorAll('table').forEach(table => {
+      table.style.fontSize = '11px';
+    });
+
+    // Generar PDF
+    html2pdf().set(options).from(element).save();
+  }, 200);
+}
+</script>
+{% endblock %}

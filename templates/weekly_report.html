@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reporte Semanal de Pagos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: white;
+        }
+        .header {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .date-range {
+            color: #34495e;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .partido-number {
+            color: #2c3e50;
+            margin: 10px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th {
+            background-color: #34495e;
+            color: white;
+            padding: 10px;
+            border: 1px solid #2c3e50;
+        }
+        td {
+            padding: 8px;
+            border: 1px solid #bdc3c7;
+        }
+        .unpaid {
+            color: red;
+        }
+        .total-section {
+            margin: 20px 0;
+            color: #2c3e50;
+        }
+        .signature-section {
+            margin-top: 30px;
+            border-top: 1px solid #bdc3c7;
+            padding-top: 20px;
+        }
+        .btn-generate {
+            background-color: #2c3e50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 20px 0;
+        }
+        @media print {
+            .btn-generate {
+                display: none;
+            }
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+    <div id="report-content">
+        <div class="header">
+            <h1>Reporte Semanal de Pagos</h1>
+        </div>
+        
+        <div class="date-range">
+            <p>Periodo: <span id="start-date"></span> - <span id="end-date"></span></p>
+        </div>
+
+        <div class="partido-number">
+            <h3>Partido #<span id="partido-num">1</span></h3>
+        </div>
+
+        <h3>Tarjetas</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Día</th>
+                    <th>Nombre</th>
+                    <th>Monto</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody id="tarjetas-body">
+                <!-- Contenido dinámico -->
+            </tbody>
+        </table>
+
+        <h3>Inscripciones</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Día</th>
+                    <th>Nombre</th>
+                    <th>Monto</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody id="inscripciones-body">
+                <!-- Contenido dinámico -->
+            </tbody>
+        </table>
+
+        <div class="total-section">
+            <h3>Totales</h3>
+            <p>Total Tarjetas: $<span id="total-tarjetas">0</span></p>
+            <p>Total Inscripciones: $<span id="total-inscripciones">0</span></p>
+            <p><strong>Total General: $<span id="total-general">0</span></strong></p>
+        </div>
+
+        <div class="signature-section">
+            <p>El dinero fue dejado a: _________________________________</p>
+        </div>
+    </div>
+
+    <button class="btn-generate" onclick="generatePDF()">Generar PDF</button>
+
+    <script>
+        // Configurar fechas
+        function setDates() {
+            const today = new Date();
+            const startOfWeek = new Date(today);
+            startOfWeek.setDate(today.getDate() - today.getDay());
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+            document.getElementById('start-date').textContent = startOfWeek.toLocaleDateString();
+            document.getElementById('end-date').textContent = endOfWeek.toLocaleDateString();
+        }
+
+        // Generar PDF
+        function generatePDF() {
+            const element = document.getElementById('report-content');
+            const opt = {
+                margin: 1,
+                filename: 'reporte-semanal.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        }
+
+        // Inicializar
+        window.onload = function() {
+            setDates();
+        };
+    </script>
+</body>
+</html>

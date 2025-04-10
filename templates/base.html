@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RS COBRANZAS</title>
@@ -108,6 +109,8 @@
             <a href="{{ url_for('admin') }}">Admin</a>
             <a href="{{ url_for('pagos') }}">Pagos de Esta Semana</a>
             <a href="{{ url_for('filtrar_pagos') }}">Filtrar Pagos</a>
+            <!-- Nuevo botón para el reporte semanal -->
+            <a href="{{ url_for('reporte_semanal') }}">Reporte Semanal</a>
         </nav>
     </header>
 
