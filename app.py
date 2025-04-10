@@ -14,7 +14,7 @@ if __name__ == '__main__':
         app.run(debug=True)
 
 # Configuración de la base de datos
-DATABASE_URL = "postgresql+pg8000://cobros_db_user:fVyfuaAwHrxz0HhIWKLZTviMvcGUATI0@dpg-culnd35umphs73f086ug-a.oregon-postgres.render.com/cobros_db"
+DATABASE_URL = "postgresql://rs_pagos_user:XnBxCpRwG7C4Cb6jKIzZ2Wta3NJoOdfI@dpg-cvrlids9c44c73d6113g-a.oregon-postgres.render.com/rs_pagos"
 engine = create_engine(DATABASE_URL)
 
 # Función auxiliar para obtener una conexión a la base de datos
