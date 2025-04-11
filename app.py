@@ -28,6 +28,84 @@ timezone = pytz.timezone('UTC')
 today_utc = datetime.now(timezone).strftime('%Y-%m-%d')  # Fecha actual en UTC
 
 
+# Ruta para procesar envíos por lotes
+@app.route('/admin/batch', methods=['POST'])
+def process_batch():
+    conn = get_db_connection()
+    try:
+        data = request.get_json()
+        
+        # Validar datos requeridos
+        if not data or 'jugadores' not in data or not data['jugadores']:
+            return jsonify({"success": False, "message": "No se proporcionaron datos de jugadores."})
+
+        # Manejar el equipo (existente o nuevo)
+        equipo_id = data.get('equipo_id')
+        if not equipo_id and data.get('nuevo_equipo'):
+            result = conn.execute(text("""
+                INSERT INTO equipo_pagos (nombre_equipo)
+                VALUES (:nombre_equipo)
+                RETURNING id_equipo
+            """), {"nombre_equipo": data['nuevo_equipo']})
+            equipo_id = result.fetchone()[0]
+        elif equipo_id:
+            equipo_id = int(equipo_id)
+        else:
+            return jsonify({"success": False, "message": "Debes seleccionar un equipo existente o ingresar uno nuevo."})
+
+        # Procesar cada jugador
+        for jugador in data['jugadores']:
+            if 'fecha_cobro' in data:  # Procesar tarjetas
+                conn.execute(text("""
+                    INSERT INTO pago_tarjetas (
+                        id_equipo, numero_partido_jugado, fecha_cobro,
+                        jugador, categoria, tarjetas_rojas,
+                        tarjetas_amarillas, observaciones, estado_pago
+                    ) VALUES (
+                        :id_equipo, :numero_partido_jugado, :fecha_cobro,
+                        :jugador, :categoria, :tarjetas_rojas,
+                        :tarjetas_amarillas, :observaciones, :estado_pago
+                    )
+                """), {
+                    "id_equipo": equipo_id,
+                    "numero_partido_jugado": data['numero_partido_jugado'],
+                    "fecha_cobro": data['fecha_cobro'],
+                    "jugador": jugador['nombre'],
+                    "categoria": data['categoria'],
+                    "tarjetas_rojas": int(jugador.get('tarjetas_rojas', 0)),
+                    "tarjetas_amarillas": int(jugador.get('tarjetas_amarillas', 0)),
+                    "observaciones": jugador.get('observaciones', ''),
+                    "estado_pago": "Pendiente"
+                })
+            else:  # Procesar inscripciones
+                conn.execute(text("""
+                    INSERT INTO pago_inscripcion (
+                        id_equipo, jugador, categoria, fecha_inscripcion,
+                        monto_a_cobrar, metodo_pago, observaciones, estado_pago
+                    ) VALUES (
+                        :id_equipo, :jugador, :categoria, :fecha_inscripcion,
+                        :monto_a_cobrar, :metodo_pago, :observaciones, :estado_pago
+                    )
+                """), {
+                    "id_equipo": equipo_id,
+                    "jugador": jugador['nombre'],
+                    "categoria": data['categoria'],
+                    "fecha_inscripcion": data['fecha_inscripcion'],
+                    "monto_a_cobrar": float(data['monto_a_cobrar']),
+                    "metodo_pago": data['metodo_pago'],
+                    "observaciones": jugador.get('observaciones', ''),
+                    "estado_pago": "Pendiente"
+                })
+
+        conn.commit()
+        return jsonify({"success": True, "message": "Datos agregados correctamente."})
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"success": False, "message": str(e)})
+    finally:
+        conn.close()
+
 # Ruta principal
 @app.route('/')
 def index():

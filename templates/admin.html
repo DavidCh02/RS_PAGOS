@@ -107,20 +107,25 @@
 <div id="main-content">
     <h2>Agregar Pago de Tarjetas</h2>
     <form id="form-tarjetas">
-        <input type="hidden" name="agregar_tarjeta" value="1">
-        <label>Nombre del Equipo:</label>
-        <select name="equipo_id" id="equipo_id_tarjeta">
-            <option value="">Seleccionar equipo...</option>
-            {% for id, nombre in equipos_existentes.items() %}
-            <option value="{{ id }}">{{ nombre }}</option>
-            {% endfor %}
-        </select>
-        <input type="text" name="nuevo_equipo" id="nuevo_equipo_tarjeta" placeholder="O ingresar nuevo equipo" style="display: none;">
-        <br>
-        <label>Número de Partido Jugado:</label>
-        <div class="form-group">
-            <label for="numero_partido_jugado">Número de Partido:</label>
-            <select name="numero_partido_jugado" id="numero_partido_jugado" class="form-control" required>
+        <div class="batch-controls">
+            <label>Nombre del Equipo:</label>
+            <select name="equipo_id" id="equipo_id_tarjeta" class="batch-field">
+                <option value="">Seleccionar equipo...</option>
+                {% for id, nombre in equipos_existentes.items() %}
+                <option value="{{ id }}">{{ nombre }}</option>
+                {% endfor %}
+            </select>
+            <input type="text" name="nuevo_equipo" id="nuevo_equipo_tarjeta" placeholder="O ingresar nuevo equipo" style="display: none;">
+            
+            <label>Categoría:</label>
+            <select name="categoria" class="batch-field" required>
+                <option value="Abierta">Abierta</option>
+                <option value="+40">+40</option>
+                <option value="Femenina">Femenina</option>
+            </select>
+
+            <label>Número de Partido:</label>
+            <select name="numero_partido_jugado" class="batch-field" required>
                 <option value="">Seleccione el número de partido</option>
                 <option value="1">1</option>
                 <option value="2">2</option>
@@ -136,58 +141,59 @@
                 <option value="Semi final">Semi final</option>
                 <option value="Final">Final</option>
             </select>
+
+            <label>Fecha de Cobro:</label>
+            <input type="date" name="fecha_cobro" class="batch-field" required>
         </div>
-        <label>Fecha de Cobro:</label>
-        <input type="date" name="fecha_cobro" required><br>
-        <label>Jugador:</label>
-        <input type="text" name="jugador" required><br>
-        <label>Categoría:</label>
-        <select name="categoria" required>
-            <option value="Abierta">Abierta</option>
-            <option value="+40">+40</option>
-            <option value="Femenina">Femenina</option>
-        </select><br>
-        <label>Tarjetas Rojas:</label>
-        <input type="number" name="tarjetas_rojas" required min="0">
-        <label>Tarjetas Amarillas:</label>
-        <input type="number" name="tarjetas_amarillas" required min="0">
-        <label>Observaciones:</label>
-        <textarea name="observaciones"></textarea><br>
-        <button type="button" onclick="enviarFormulario('form-tarjetas')">Agregar</button>
+
+        <div class="players-container" id="players-container-tarjetas">
+            <!-- Players will be added here dynamically -->
+        </div>
+
+        <button type="button" onclick="agregarJugador('tarjetas')">Agregar Jugador</button>
+        <button type="button" onclick="clonarUltimoJugador('tarjetas')">Clonar Último Jugador</button>
+        <button type="button" onclick="enviarFormularioMultiple('form-tarjetas')">Guardar Todos</button>
     </form>
 
     <h2>Agregar Pago de Inscripción</h2>
     <form id="form-inscripcion">
-        <input type="hidden" name="agregar_inscripcion" value="1">
-        <label>Nombre del Equipo:</label>
-        <select name="equipo_id" id="equipo_id_inscripcion">
-            <option value="">Seleccionar equipo...</option>
-            {% for id, nombre in equipos_existentes.items() %}
-            <option value="{{ id }}">{{ nombre }}</option>
-            {% endfor %}
-        </select>
-        <input type="text" name="nuevo_equipo" id="nuevo_equipo_inscripcion" placeholder="O ingresar nuevo equipo" style="display: none;">
-        <br>
-        <label>Jugador:</label>
-        <input type="text" name="jugador" required><br>
-        <label>Categoría:</label>
-        <select name="categoria" required>
-            <option value="Abierta">Abierta</option>
-            <option value="+40">+40</option>
-            <option value="Femenina">Femenina</option>
-        </select><br>
-        <label>Fecha de Inscripción:</label>
-        <input type="date" name="fecha_inscripcion" required><br>
-        <label>Monto a Cobrar:</label>
-        <input type="number" step="0.01" name="monto_a_cobrar" required><br>
-        <label>Método de Pago:</label>
-        <select name="metodo_pago" required>
-            <option value="Efectivo">Efectivo</option>
-            <option value="Transferencia">Transferencia</option>
-        </select><br>
-        <label>Observaciones:</label>
-        <textarea name="observaciones"></textarea><br>
-        <button type="button" onclick="enviarFormulario('form-inscripcion')">Agregar</button>
+        <div class="batch-controls">
+            <label>Nombre del Equipo:</label>
+            <select name="equipo_id" id="equipo_id_inscripcion" class="batch-field">
+                <option value="">Seleccionar equipo...</option>
+                {% for id, nombre in equipos_existentes.items() %}
+                <option value="{{ id }}">{{ nombre }}</option>
+                {% endfor %}
+            </select>
+            <input type="text" name="nuevo_equipo" id="nuevo_equipo_inscripcion" placeholder="O ingresar nuevo equipo" style="display: none;">
+
+            <label>Categoría:</label>
+            <select name="categoria" class="batch-field" required>
+                <option value="Abierta">Abierta</option>
+                <option value="+40">+40</option>
+                <option value="Femenina">Femenina</option>
+            </select>
+
+            <label>Fecha de Inscripción:</label>
+            <input type="date" name="fecha_inscripcion" class="batch-field" required>
+
+            <label>Monto a Cobrar:</label>
+            <input type="number" step="0.01" name="monto_a_cobrar" class="batch-field" required>
+
+            <label>Método de Pago:</label>
+            <select name="metodo_pago" class="batch-field" required>
+                <option value="Efectivo">Efectivo</option>
+                <option value="Transferencia">Transferencia</option>
+            </select>
+        </div>
+
+        <div class="players-container" id="players-container-inscripcion">
+            <!-- Players will be added here dynamically -->
+        </div>
+
+        <button type="button" onclick="agregarJugador('inscripcion')">Agregar Jugador</button>
+        <button type="button" onclick="clonarUltimoJugador('inscripcion')">Clonar Último Jugador</button>
+        <button type="button" onclick="enviarFormularioMultiple('form-inscripcion')">Guardar Todos</button>
     </form>
 </div>
 
@@ -234,37 +240,127 @@
         const usuario = document.getElementById("usuario").value;
         const contrasena = document.getElementById("contrasena").value;
         if (usuario === USUARIO_ADMIN && contrasena === CONTRASENA_ADMIN) {
-            // Guardar el estado de autenticación en localStorage
             localStorage.setItem("isLoggedIn", "true");
-            // Ocultar la ventana emergente y mostrar el contenido principal
             document.getElementById("login-popup").style.display = "none";
             document.getElementById("main-content").style.display = "block";
         } else {
-            // Mostrar mensaje de error
             document.getElementById("error-message").style.display = "block";
         }
     }
 
-    function enviarFormulario(formId) {
+    function agregarJugador(tipo) {
+        const container = document.getElementById(`players-container-${tipo}`);
+        const jugadorDiv = document.createElement('div');
+        jugadorDiv.className = 'jugador-entry';
+        jugadorDiv.style.marginBottom = '20px';
+        jugadorDiv.style.padding = '15px';
+        jugadorDiv.style.border = '1px solid #ffcc00';
+        jugadorDiv.style.borderRadius = '5px';
+
+        if (tipo === 'tarjetas') {
+            jugadorDiv.innerHTML = `
+                <label>Nombre del Jugador:</label>
+                <input type="text" name="jugadores[][nombre]" required>
+                <label>Tarjetas Rojas:</label>
+                <input type="number" name="jugadores[][tarjetas_rojas]" min="0" value="0">
+                <label>Tarjetas Amarillas:</label>
+                <input type="number" name="jugadores[][tarjetas_amarillas]" min="0" value="0">
+                <label>Observaciones:</label>
+                <textarea name="jugadores[][observaciones]"></textarea>
+                <button type="button" onclick="this.parentElement.remove()" style="background-color: #ff4444">Eliminar Jugador</button>
+            `;
+        } else {
+            jugadorDiv.innerHTML = `
+                <label>Nombre del Jugador:</label>
+                <input type="text" name="jugadores[][nombre]" required>
+                <label>Observaciones:</label>
+                <textarea name="jugadores[][observaciones]"></textarea>
+                <button type="button" onclick="this.parentElement.remove()" style="background-color: #ff4444">Eliminar Jugador</button>
+            `;
+        }
+
+        container.appendChild(jugadorDiv);
+    }
+
+    function clonarUltimoJugador(tipo) {
+        const container = document.getElementById(`players-container-${tipo}`);
+        const jugadores = container.getElementsByClassName('jugador-entry');
+        if (jugadores.length > 0) {
+            const ultimoJugador = jugadores[jugadores.length - 1];
+            const clon = ultimoJugador.cloneNode(true);
+            const inputs = clon.getElementsByTagName('input');
+            for (let input of inputs) {
+                if (input.type === 'text') input.value = '';
+            }
+            const textareas = clon.getElementsByTagName('textarea');
+            for (let textarea of textareas) {
+                textarea.value = '';
+            }
+            container.appendChild(clon);
+        }
+    }
+
+    function enviarFormularioMultiple(formId) {
         const form = document.getElementById(formId);
         const formData = new FormData(form);
+        const batchData = {
+            equipo_id: formData.get('equipo_id'),
+            nuevo_equipo: formData.get('nuevo_equipo'),
+            categoria: formData.get('categoria'),
+            jugadores: []
+        };
 
-        fetch("/admin", {
+        // Add form-specific fields
+        if (formId === 'form-tarjetas') {
+            batchData.fecha_cobro = formData.get('fecha_cobro');
+            batchData.numero_partido_jugado = formData.get('numero_partido_jugado');
+        } else if (formId === 'form-inscripcion') {
+            batchData.fecha_inscripcion = formData.get('fecha_inscripcion');
+            batchData.monto_a_cobrar = formData.get('monto_a_cobrar');
+            batchData.metodo_pago = formData.get('metodo_pago');
+        }
+
+        const jugadoresEntries = form.getElementsByClassName('jugador-entry');
+        for (let entry of jugadoresEntries) {
+            const jugador = {
+                nombre: entry.querySelector('input[name="jugadores[][nombre]"]').value,
+                observaciones: entry.querySelector('textarea[name="jugadores[][observaciones]"]').value
+            };
+
+            if (formId === 'form-tarjetas') {
+                jugador.tarjetas_rojas = entry.querySelector('input[name="jugadores[][tarjetas_rojas]"]').value;
+                jugador.tarjetas_amarillas = entry.querySelector('input[name="jugadores[][tarjetas_amarillas]"]').value;
+            }
+
+            batchData.jugadores.push(jugador);
+        }
+
+        fetch("/admin/batch", {
             method: "POST",
-            body: formData,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(batchData)
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 alert("Datos agregados correctamente.");
-                form.reset(); // Limpiar el formulario
+                form.reset();
+                const container = document.getElementById(`players-container-${formId === 'form-tarjetas' ? 'tarjetas' : 'inscripcion'}`);
+                container.innerHTML = '';
             } else {
-                alert("Error al agregar los datos.");
+                alert(data.message || "Error al agregar los datos.");
             }
         })
         .catch(error => {
             console.error("Error:", error);
-            alert("Ocurrió un error al procesar la solicitud.");
+            alert("Ocurrió un error al procesar la solicitud: " + error.message);
         });
     }
 

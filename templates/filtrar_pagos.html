@@ -56,6 +56,12 @@
         background: #555;
         color: #eee;
     }
+    .team-header {
+        background: #4a4a4a;
+        color: #ffcc00;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
     button {
         background: #ffcc00;
         color: #333;
@@ -86,20 +92,39 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        padding: 20px;
     }
     .modal-content {
         background: #2a2a2a;
         padding: 20px;
         border-radius: 8px;
-        max-width: 600px;
         width: 90%;
+        max-width: 600px;
+        max-height: 90vh;
+        overflow-y: auto;
+        position: relative;
+    }
+    .close {
+        position: absolute;
+        right: 20px;
+        top: 20px;
+        font-size: 24px;
+        cursor: pointer;
+        color: #fff;
     }
     @media (max-width: 480px) {
+        .modal-content {
+            padding: 15px;
+            width: 95%;
+        }
         form, .modal-content {
             padding: 15px;
         }
         label, input, select, textarea, button {
             font-size: 14px;
+        }
+        .table-container {
+            overflow-x: auto;
         }
     }
 </style>
@@ -404,5 +429,65 @@ function setSelectValue(id, value) {
         })
         .catch(error => console.error("Error:", error));
     }
+
+// Funciones JavaScript aquí
+    function eliminarPago(id, tipo) {
+        if (confirm("¿Estás seguro de eliminar este registro?")) {
+            fetch(`/eliminar_registro?id=${encodeURIComponent(id)}&tipo=${encodeURIComponent(tipo)}`, {
+                method: "DELETE",
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Registro eliminado correctamente.");
+                    window.location.reload(); // Recargar la página
+                } else {
+                    alert("Error al eliminar el registro.");
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
+    }
+
+
+    // Función para agrupar pagos por equipo
+    function agruparPagosPorEquipo() {
+        const tabla = document.getElementById('tabla-tarjetas');
+        if (!tabla) return;
+
+        const tbody = tabla.querySelector('tbody');
+        const filas = Array.from(tbody.querySelectorAll('tr'));
+        const equipos = {};
+
+        // Agrupar filas por equipo
+        filas.forEach(fila => {
+            const equipo = fila.cells[0].textContent;
+            if (!equipos[equipo]) {
+                equipos[equipo] = [];
+            }
+            equipos[equipo].push(fila);
+        });
+
+        // Limpiar tbody
+        tbody.innerHTML = '';
+
+        // Reconstruir tabla con grupos
+        Object.entries(equipos).forEach(([equipo, filas]) => {
+            // Agregar encabezado del equipo
+            const headerRow = document.createElement('tr');
+            headerRow.className = 'team-header';
+            const headerCell = document.createElement('td');
+            headerCell.colSpan = tabla.rows[0].cells.length;
+            headerCell.textContent = `Equipo: ${equipo}`;
+            headerRow.appendChild(headerCell);
+            tbody.appendChild(headerRow);
+
+            // Agregar filas del equipo
+            filas.forEach(fila => tbody.appendChild(fila));
+        });
+    }
+
+    // Ejecutar agrupación cuando se carga la página
+    document.addEventListener('DOMContentLoaded', agruparPagosPorEquipo);
 </script>
 {% endblock %}
