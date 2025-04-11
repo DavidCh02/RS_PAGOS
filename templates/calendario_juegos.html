@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .schedule-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #000000;
+        color: #ffffff;
+    }
+
+    .title {
+        text-align: center;
+        color: #FFD700; /* Golden color for "OCTAVOS DE FINAL" */
+        font-size: 48px;
+        margin-bottom: 30px;
+        text-transform: uppercase;
+        font-weight: bold;
+    }
+
+    .date {
+        text-align: center;
+        color: #ffffff;
+        font-size: 36px;
+        margin: 20px 0;
+        text-transform: uppercase;
+    }
+
+    .matches-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+        margin-top: 20px;
+    }
+
+    .match-row {
+        display: grid;
+        grid-template-columns: 2fr 1fr 2fr;
+        align-items: center;
+        padding: 10px;
+        background: linear-gradient(90deg, #000000, #1a1a1a);
+        border: 1px solid #333;
+    }
+
+    .team {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 10px;
+    }
+
+    .team-logo {
+        width: 60px;
+        height: 60px;
+        background-color: #333; /* Placeholder for team logos */
+        border-radius: 50%;
+    }
+
+    .team-name {
+        font-size: 24px;
+        color: #ffffff;
+    }
+
+    .match-info {
+        text-align: center;
+        font-size: 20px;
+        color: #ffffff;
+    }
+
+    .category {
+        color: #FFD700;
+        font-size: 16px;
+        margin-top: 5px;
+    }
+
+    /* Decorative elements */
+    .corner-decoration {
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        /* Add your corner decoration image here */
+    }
+
+    .download-button {
+        display: block;
+        margin: 30px auto;
+        padding: 15px 30px;
+        background-color: #FFD700;
+        color: #000000;
+        border: none;
+        border-radius: 5px;
+        font-size: 18px;
+        cursor: pointer;
+        text-transform: uppercase;
+        font-weight: bold;
+    }
+
+    .download-button:hover {
+        background-color: #FFC800;
+    }
+
+    /* Background image container */
+    .background-container {
+        position: relative;
+        /* COMENTARIO: Agregar imagen de fondo aquí
+           Ejemplo: background-image: url('/static/images/tournament-background.jpg'); */
+        background-size: cover;
+        background-position: center;
+        padding: 20px;
+    }
+
+    /* Logo container */
+    .logo-container {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .tournament-logo {
+        max-width: 200px;
+        /* COMENTARIO: Agregar logo del torneo aquí
+           Ejemplo: <img src="/static/images/tournament-logo.png" alt="Tournament Logo"> */
+    }
+</style>
+
+<div class="schedule-container">
+    <div class="background-container">
+        <div class="logo-container">
+            <!-- COMENTARIO: Insertar logo del torneo aquí -->
+            <img src="{{ url_for('static', filename='images/tournament-logo.png') }}" alt="Tournament Logo" class="tournament-logo">
+        </div>
+
+        <h1 class="title">Octavos de Final</h1>
+        
+        <!-- Form for adding new matches -->
+        <div class="add-match-form">
+            <h3 style="color: #FFD700; text-align: center;">Agregar Nuevo Partido</h3>
+            <div class="form-group">
+                <label>Fecha:</label>
+                <input type="date" id="matchDate" required>
+            </div>
+            <div class="form-group">
+                <label>Hora:</label>
+                <input type="time" id="matchTime" required>
+            </div>
+            <div class="form-group">
+                <label>Equipo Local:</label>
+                <input type="text" id="team1" placeholder="Nombre del equipo local" required>
+            </div>
+            <div class="form-group">
+                <label>Equipo Visitante:</label>
+                <input type="text" id="team2" placeholder="Nombre del equipo visitante" required>
+            </div>
+            <div class="form-group">
+                <label>Categoría:</label>
+                <select id="category" required>
+                    <option value="ABIERTA">ABIERTA</option>
+                    <option value="+40">+40</option>
+                    <option value="FEMENINO">FEMENINO</option>
+                </select>
+            </div>
+            <button class="add-match-button" onclick="addMatch()">Agregar Partido</button>
+        </div>
+
+        <div id="matches-container"></div>
+
+        <button class="download-button" onclick="downloadImage()">Descargar Calendario</button>
+    </div>
+</div>
+
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+<script>
+let matches = [];
+
+function formatDate(date) {
+    const days = ['DOM', 'LUN', 'MAR', 'MIE', 'JUE', 'VIE', 'SÁB'];
+    const months = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'];
+    const d = new Date(date);
+    return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]}`;
+}
+
+function addMatch() {
+    const date = document.getElementById('matchDate').value;
+    const time = document.getElementById('matchTime').value;
+    const team1 = document.getElementById('team1').value;
+    const team2 = document.getElementById('team2').value;
+    const category = document.getElementById('category').value;
+
+    if (!date || !time || !team1 || !team2 || !category) {
+        alert('Por favor complete todos los campos');
+        return;
+    }
+
+    matches.push({date, time, team1, team2, category});
+    matches.sort((a, b) => new Date(a.date + 'T' + a.time) - new Date(b.date + 'T' + b.time));
+    renderMatches();
+}
+
+function renderMatches() {
+    const container = document.getElementById('matches-container');
+    container.innerHTML = '';
+    
+    let currentDate = '';
+    matches.forEach(match => {
+        if (currentDate !== match.date) {
+            currentDate = match.date;
+            container.innerHTML += `<h2 class="date">${formatDate(match.date)}</h2><div class="matches-grid">`;
+        }
+
+        container.innerHTML += `
+            <div class="match-row">
+                <div class="team">
+                    <div class="team-logo"></div>
+                    <span class="team-name">${match.team1}</span>
+                </div>
+                <div class="match-info">
+                    <div>${match.time}</div>
+                    <div class="category">${match.category}</div>
+                </div>
+                <div class="team">
+                    <span class="team-name">${match.team2}</span>
+                    <div class="team-logo"></div>
+                </div>
+            </div>
+        `;
+    });
+}
+
+function downloadImage() {
+    const element = document.querySelector('.schedule-container');
+    
+    html2canvas(element, {
+        scale: 2,
+        backgroundColor: null,
+        logging: true,
+        useCORS: true
+    }).then(canvas => {
+        const image = canvas.toDataURL('image/jpeg', 0.9);
+        const link = document.createElement('a');
+        link.download = 'calendario_octavos.jpg';
+        link.href = image;
+        link.click();
+    });
+}
+</script>
+{% endblock %}

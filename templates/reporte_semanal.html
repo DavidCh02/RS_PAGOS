@@ -100,6 +100,7 @@
     th:nth-child(4) { width: 20%; }
     th:nth-child(5) { width: 10%; }
     th:nth-child(6) { width: 10%; }
+    th:nth-child(7) { width: 20%; }
 
     @media print {
         .report-container {
@@ -112,13 +113,17 @@
         }
 
         table {
+            width: 100%;
+            border-collapse: collapse;
             margin: 10px 0;
             page-break-inside: auto;
             font-size: 9pt;
         }
 
         th, td {
-            padding: 4px 6px;
+            padding: 12px;
+            border: 1px solid #555;
+            text-align: left;
         }
 
         tr { page-break-inside: avoid; }
@@ -237,6 +242,7 @@
                 <th>Tarjetas</th>
                 <th>Monto</th>
                 <th>Estado</th>
+                <th>Observaciones</th>
             </tr>
         </thead>
         <tbody>
@@ -268,6 +274,8 @@
                     </td>
                     <td>${{ (pago.tarjetas_rojas * 4) + (pago.tarjetas_amarillas * 2) }}</td>
                     <td>{{ pago.estado_pago }}</td>
+                    <td><input type="text" value="{{ pago.observaciones }}" ></td>
+
                 </tr>
             {% endfor %}
         </tbody>
@@ -285,6 +293,7 @@
                 <th>Categoría</th>
                 <th>Monto</th>
                 <th>Estado</th>
+                <th>Observaciones</th>
             </tr>
         </thead>
         <tbody>
@@ -312,6 +321,7 @@
                     {% endif %}
                     <td>${{ pago.monto_a_cobrar }}</td>
                     <td>{{ pago.estado_pago }}</td>
+                    <td><input type="text" value="{{ pago.observaciones }}" ></td>
                 </tr>
             {% endfor %}
         </tbody>
@@ -320,8 +330,10 @@
     {% endfor %}
 
     <!-- Totales -->
-    <div class="total-section">
+       <div class="total-section">
         <h4>Total a Pagar Esta Semana</h4>
+        <div class="totales-grid">
+            <div class="total-column">
         <p><strong>Total Tarjetas Pendientes:</strong>
             {% if total_tarjetas_pendientes > 0 %}
                 ${{ "%.2f"|format(total_tarjetas_pendientes) }}
@@ -336,16 +348,24 @@
                 <span style="color: green;">(Nada pendiente)</span>
             {% endif %}
         </p>
-        <p><strong>Total General:</strong> ${{ "%.2f"|format(total_general) }}</p>
+                <p><strong>Total General:</strong> ${{ "%.2f"|format(total_general) }}</p>
 
-        <!-- Dinero dejado a -->
-    <div class="signature-section">
-        <div class="form-group">
+            </div>
+            <div class="total-column">
+                <p><strong>Total Tarjetas Pagadas:</strong> ${{ total_tarjetas_pagadas }}</p>
+                <p><strong>Total Inscripciones Pagadas:</strong> ${{ total_inscripciones_pagadas }}</p>
+            </div>
+        </div>
+        <div>
+            <h4>Observación General</h4>
+            <textarea style="width: 100%; height: 80px;">{{ observacion_general }}</textarea>
+        </div>
+        <div class="signature-section">
             <label for="recibe">Dinero dejado a:</label>
             <input type="text" id="recibe" name="recibe" style="width: 300px; padding: 8px;">
         </div>
     </div>
-    </div>
+</div>
 
 
 </div>
@@ -357,83 +377,35 @@ document.getElementById('numero_partido').addEventListener('change', function() 
 });
 
 function generatePDF() {
-  const recibeValue = document.getElementById('recibe').value;
+    const recibeValue = document.getElementById('recibe').value;
+    const signatureSection = document.querySelector('.signature-section');
+    const recibeText = document.createElement('p');
+    recibeText.textContent = `Dinero dejado a: ${recibeValue || '(Sin especificar)'}`;
+    recibeText.style.fontWeight = 'bold';
+    signatureSection.innerHTML = '';
+    signatureSection.appendChild(recibeText);
 
-  // Agregar Dinero dejado a
-  const signatureSection = document.querySelector('.signature-section');
-  const recibeText = document.createElement('p');
-  recibeText.textContent = `Dinero dejado a: ${recibeValue || '(Sin especificar)'}`;  
-  recibeText.style.fontWeight = 'bold';
-  signatureSection.innerHTML = '';
-  signatureSection.appendChild(recibeText);
+    setTimeout(() => {
+        const element = document.querySelector('.report-container');
+        const options = {
+            margin: [10, 10, 10, 10],
+            filename: 'reporte_semanal.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: {
+                scale: 3,
+                useCORS: true,
+                scrollY: -window.scrollY
+            },
+            jsPDF: {
+                unit: 'mm',
+                format: 'letter',
+                orientation: 'portrait'
+            },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        };
 
-  setTimeout(() => {
-    const element = document.querySelector('.report-container');
-
-    const options = {
-      margin: [10, 10, 10, 10],
-      filename: 'reporte_semanal.pdf',
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: {
-        scale: 3,
-        dpi: 300,
-        letterRendering: true,
-        useCORS: true,
-        scrollY: -window.scrollY,
-        windowWidth: element.scrollWidth,
-        logging: true,
-        allowTaint: true,
-        removeContainer: true,
-        foreignObjectRendering: true
-      },
-      jsPDF: {
-        unit: 'mm',
-        format: 'letter',
-        orientation: 'portrait',
-        compress: true,
-        precision: 16,
-        hotfixes: ['px_scaling']
-      },
-      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-    };
-
-    // Crear una copia del elemento para manipular
-    const clonedElement = element.cloneNode(true);
-    document.body.appendChild(clonedElement);
-    clonedElement.style.position = 'absolute';
-    clonedElement.style.left = '-9999px';
-
-    // Aplicar estilos optimizados para PDF
-    clonedElement.style.width = '210mm';
-    clonedElement.style.maxWidth = 'none';
-    clonedElement.style.padding = '10mm';
-    clonedElement.style.fontSize = '10pt';
-    clonedElement.style.backgroundColor = '#ffffff';
-    clonedElement.style.margin = '0';
-
-    // Optimizar tablas
-    clonedElement.querySelectorAll('table').forEach(table => {
-      table.style.fontSize = '9pt';
-      table.style.width = '100%';
-      table.style.pageBreakInside = 'auto';
-      table.style.borderCollapse = 'collapse';
-    });
-
-    // Optimizar celdas de tabla
-    clonedElement.querySelectorAll('th, td').forEach(cell => {
-      cell.style.padding = '4px 6px';
-      cell.style.borderWidth = '0.5pt';
-    });
-
-    // Generar PDF
-    html2pdf().set(options).from(clonedElement).save().then(() => {
-      // Limpiar
-      document.body.removeChild(clonedElement);
-    }).catch(error => {
-      console.error('Error generando PDF:', error);
-      document.body.removeChild(clonedElement);
-    });
-  }, 200);
+        html2pdf().set(options).from(element).save();
+    }, 200);
 }
 </script>
 {% endblock %}

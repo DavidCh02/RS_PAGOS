@@ -10,6 +10,7 @@ app.secret_key = "supersecretkey"  # Clave secreta para usar flash()
 if __name__ == '__main__':
     app.run(debug=True)
 
+
 # Configuración de la base de datos
 DATABASE_URL = "postgresql+pg8000://rs_pagos_user:XnBxCpRwG7C4Cb6jKIzZ2Wta3NJoOdfI@dpg-cvrlids9c44c73d6113g-a.oregon-postgres.render.com/rs_pagos"
 engine = create_engine(DATABASE_URL)
