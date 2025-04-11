@@ -143,6 +143,7 @@
     <div class="logo">
         <img src="https://png.pngtree.com/png-clipart/20240312/original/pngtree-illustration-of-golden-soccer-symbol-it-s-winner-concept-png-image_14575046.png" alt="Logo Balón de Oro">
     </div>
+
     <!-- Contenido principal -->
     <h2>Pagos Pendientes</h2>
     <p><strong>Fecha Actual:</strong> {{ fecha_actual }}</p>
@@ -155,6 +156,7 @@
         {% elif dia == "Domingo" %}
             <small>({{ fecha_domingo }})</small>
         {% endif %}
+
     </h3>
     <!-- Pagos de Tarjetas -->
     {% if pagos.tarjetas %}
@@ -228,9 +230,7 @@
     <!-- Enlace a pagos realizados esta semana -->
     <a href="{{ url_for('pagados_hoy') }}">Ver Pagos Realizados Esta Semana</a>
     <!-- Espacio para imágenes -->
-    <div class="imagen-container">
-        <img src="https://via.placeholder.com/800x400" alt="Imagen de ejemplo">
-    </div>
+
     <script>
         // Función para mostrar/ocultar detalles
         function toggleDetails(id) {

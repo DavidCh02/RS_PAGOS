@@ -3,19 +3,17 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from sqlalchemy import create_engine, text
 from flask import Flask, request, jsonify
 
-
-
-
 # Crear la aplicación Flask
 app = Flask(__name__)
 app.secret_key = "supersecretkey"  # Clave secreta para usar flash()
 
 if __name__ == '__main__':
-        app.run(debug=True)
+    app.run(debug=True)
 
 # Configuración de la base de datos
 DATABASE_URL = "postgresql+pg8000://rs_pagos_user:XnBxCpRwG7C4Cb6jKIzZ2Wta3NJoOdfI@dpg-cvrlids9c44c73d6113g-a.oregon-postgres.render.com/rs_pagos"
 engine = create_engine(DATABASE_URL)
+
 
 # Función auxiliar para obtener una conexión a la base de datos
 def get_db_connection():
@@ -29,10 +27,12 @@ import pytz
 timezone = pytz.timezone('UTC')
 today_utc = datetime.now(timezone).strftime('%Y-%m-%d')  # Fecha actual en UTC
 
+
 # Ruta principal
 @app.route('/')
 def index():
     return redirect(url_for('admin'))
+
 
 # Panel de administrador
 @app.route('/admin', methods=['GET', 'POST'])
@@ -154,6 +154,7 @@ def admin():
     # Renderizar la plantilla con la lista de equipos existentes
     return render_template('admin.html', equipos_existentes=equipos_existentes)
 
+
 if __name__ == '__main__':
     app.run(debug=True)
 
@@ -270,6 +271,7 @@ def pagos():
         fecha_domingo=domingo
     )
 
+
 # Página para mostrar los pagos realizados hoy
 from datetime import datetime
 import pytz
@@ -287,6 +289,7 @@ import pytz
 
 from datetime import datetime, timedelta
 import pytz
+
 
 @app.route('/pagados_hoy', methods=['GET'])
 def pagados_hoy():
@@ -369,6 +372,7 @@ def pagados_hoy():
         end_of_week_nombre=end_of_week_nombre
     )
 
+
 @app.route('/filtrar_pagos', methods=['GET', 'POST'])
 def filtrar_pagos():
     fecha_seleccionada = None
@@ -376,28 +380,32 @@ def filtrar_pagos():
     estado_seleccionado = None
     pagos_tarjetas = []
     pagos_inscripciones = []
+    equipos_existentes = {}
+
     conn = get_db_connection()
     try:
+        # ✅ Cargar equipos desde la base de datos
+        result_equipos = conn.execute(text("SELECT id_equipo, nombre_equipo FROM equipo_pagos"))
+        equipos_existentes = {row.id_equipo: row.nombre_equipo for row in result_equipos.fetchall()}
+
         if request.method == 'POST':
             tipo_busqueda = request.form.get('tipo_busqueda')
             estado_seleccionado = request.form.get('estado_pago')
 
             # Base queries
             query_tarjetas = """
-                SELECT pt.*, 
-                       ep.nombre_equipo  -- Agregamos explícitamente el nombre del equipo
+                SELECT pt.*, ep.nombre_equipo
                 FROM pago_tarjetas pt
                 LEFT JOIN equipo_pagos ep ON pt.id_equipo = ep.id_equipo
                 WHERE 1=1
             """
             query_inscripciones = """
-                SELECT pi.*, 
-                       ep.nombre_equipo  -- Agregamos explícitamente el nombre del equipo
+                SELECT pi.*, ep.nombre_equipo
                 FROM pago_inscripcion pi
                 LEFT JOIN equipo_pagos ep ON pi.id_equipo = ep.id_equipo
                 WHERE 1=1
             """
-            
+
             params_tarjetas = {}
             params_inscripciones = {}
 
@@ -420,12 +428,12 @@ def filtrar_pagos():
                 params_tarjetas["estado_pago"] = estado_seleccionado
                 params_inscripciones["estado_pago"] = estado_seleccionado
 
-            result_tarjetas = conn.execute(text(query_tarjetas), params_tarjetas)
-            pagos_tarjetas = result_tarjetas.fetchall()
+            # Ejecutar consultas
+            pagos_tarjetas = conn.execute(text(query_tarjetas), params_tarjetas).fetchall()
 
+            # Solo buscar inscripciones si estamos filtrando por fecha
             if tipo_busqueda == 'fecha':
-                result_inscripciones = conn.execute(text(query_inscripciones), params_inscripciones)
-                pagos_inscripciones = result_inscripciones.fetchall()
+                pagos_inscripciones = conn.execute(text(query_inscripciones), params_inscripciones).fetchall()
 
     finally:
         conn.close()
@@ -436,165 +444,107 @@ def filtrar_pagos():
         pagos_inscripciones=pagos_inscripciones,
         fecha_seleccionada=fecha_seleccionada,
         numero_partido=numero_partido,
-        estado_seleccionado=estado_seleccionado
+        estado_seleccionado=estado_seleccionado,
+        equipos_existentes=equipos_existentes  # ✅ Corregido: ahora está definido
     )
+
+
 if __name__ == '__main__':
     app.run(debug=True)
 
 
-
-
-
 @app.route('/eliminar_registro', methods=['DELETE'])
 def eliminar_registro():
-    id_registro = request.args.get('id')
-    tipo = request.args.get('tipo')  # "tarjeta" o "inscripcion"
+    id = request.args.get('id')
+    tipo = request.args.get('tipo')
+
     conn = get_db_connection()
     try:
-        if tipo == "tarjeta":
-            conn.execute(text("DELETE FROM pago_tarjetas WHERE id_pago = :id_registro"), {"id_registro": id_registro})
-        elif tipo == "inscripcion":
-            conn.execute(text("DELETE FROM pago_inscripcion WHERE id_inscripcion = :id_registro"), {"id_registro": id_registro})
-        conn.commit()  # Confirmar los cambios
-        return jsonify({"success": True, "message": "Registro eliminado correctamente."})
+        if tipo == 'tarjeta':
+            query = "DELETE FROM pago_tarjetas WHERE id_pago = :id"
+        elif tipo == 'inscripcion':
+            query = "DELETE FROM pago_inscripcion WHERE id_inscripcion = :id"
+        else:
+            return jsonify({"success": False, "message": "Tipo de registro no válido"})
+
+        conn.execute(text(query), {"id": id})
+        conn.commit()
+        return jsonify({"success": True, "message": "Registro eliminado correctamente"})
     except Exception as e:
-        conn.rollback()
         return jsonify({"success": False, "message": str(e)})
     finally:
         conn.close()
-@app.route('/editar_registro_tarjeta', methods=['POST'])
-def editar_registro_tarjeta():
-    id_pago = request.form.get('id_pago_tarjeta')
-    jugador = request.form.get('jugador_editar_tarjeta')
-    categoria = request.form.get('categoria_editar_tarjeta')
-    tarjetas_rojas = request.form.get('tarjetas_rojas_editar')
-    tarjetas_amarillas = request.form.get('tarjetas_amarillas_editar')
-    observaciones = request.form.get('observaciones_editar_tarjeta')
-    metodo_pago = request.form.get('metodo_pago_editar_tarjeta')
-    fecha_pago = request.form.get('fecha_pago_editar_tarjeta')
-    estado_pago = request.form.get('estado_pago_editar_tarjeta')
 
-    # Validar que los campos obligatorios no estén vacíos
-    if not all([id_pago, jugador, categoria, fecha_pago, estado_pago]):
-        flash("Todos los campos obligatorios deben estar completos.", "error")
-        return redirect(url_for('filtrar_pagos'))
 
+@app.route('/editar_registro/<tipo>/<id>', methods=['GET'])
+def editar_registro(tipo, id):
     conn = get_db_connection()
     try:
-        conn.execute(text("""
-        UPDATE pago_tarjetas
-        SET jugador = :jugador, categoria = :categoria, tarjetas_rojas = :tarjetas_rojas,
-            tarjetas_amarillas = :tarjetas_amarillas, observaciones = :observaciones,
-            metodo_pago = :metodo_pago, fecha_cobro = :fecha_pago, estado_pago = :estado_pago
-        WHERE id_pago = :id_pago
-        """), {
-            "id_pago": id_pago,
-            "jugador": jugador,
-            "categoria": categoria,
-            "tarjetas_rojas": tarjetas_rojas or 0,  # Valor predeterminado si está vacío
-            "tarjetas_amarillas": tarjetas_amarillas or 0,  # Valor predeterminado si está vacío
-            "observaciones": observaciones,
-            "metodo_pago": metodo_pago,
-            "fecha_pago": fecha_pago,
-            "estado_pago": estado_pago
-        })
-        conn.commit()  # Confirmar los cambios
-        flash("Registro actualizado correctamente.", "success")  # Mensaje de éxito
-        return redirect(url_for('filtrar_pagos'))  # Redirigir a la página de edición
+        if tipo == 'tarjeta':
+            query = "SELECT * FROM pago_tarjetas WHERE id_pago = :id"
+        elif tipo == 'inscripcion':
+            query = "SELECT * FROM pago_inscripcion WHERE id_inscripcion = :id"
+        else:
+            return jsonify({"success": False, "message": "Tipo de registro no válido"})
+
+        # 👇 CAMBIO IMPORTANTE
+        result = conn.execute(text(query), {"id": id}).mappings().fetchone()
+
+        if result:
+            registro = dict(result)
+            return jsonify({"success": True, "data": registro})
+        else:
+            return jsonify({"success": False, "message": "Registro no encontrado"})
     except Exception as e:
-        conn.rollback()
-        print(f"Error detallado: {str(e)}")  # Imprime el error en la terminal
-        flash(f"Error al actualizar el registro: {str(e)}", "error")  # Mensaje de error
-        return redirect(url_for('filtrar_pagos'))  # Redirigir a la página de edición
+        return jsonify({"success": False, "message": str(e)})
     finally:
         conn.close()
 
-@app.route('/editar_registro_inscripcion', methods=['POST'])
-def editar_registro_inscripcion():
+
+@app.route('/actualizar_registro/<tipo>/<id>', methods=['POST'])
+def actualizar_registro(tipo, id):
     # Obtener los datos del formulario
-    id_registro = request.form.get('id_registro')
-    jugador = request.form.get('jugador_editar')
-    categoria = request.form.get('categoria_editar')
-    fecha = request.form.get('fecha_editar')
-    estado = request.form.get('estado_editar')
-    monto = request.form.get('monto_editar')  # Añadido para manejar el monto
-    metodo_pago = request.form.get('metodo_pago_editar')  # Añadido para manejar el método de pago
-    observaciones = request.form.get('observaciones_editar')  # Añadido para manejar observaciones
-    id_equipo = request.form.get('equipo_editar')  # Añadido para manejar el ID del equipo
-
-    # Validar que los campos obligatorios no estén vacíos
-    if not all([id_registro, jugador, categoria, fecha, estado]):
-        return jsonify({"success": False, "message": "Todos los campos obligatorios deben estar completos."})
-
-    # Conectar a la base de datos
+    data = {key: value for key, value in request.form.items() if key != "valor_total_pagar"}  # Filtrar valor_total_pagar
     conn = get_db_connection()
     try:
-        # Actualizar el registro en la tabla `pago_inscripcion`
-        conn.execute(text("""
-            UPDATE pago_inscripcion
-            SET jugador = :jugador, categoria = :categoria, fecha_inscripcion = :fecha,
-                estado_pago = :estado, monto_a_cobrar = :monto, metodo_pago = :metodo_pago,
-                observaciones = :observaciones, id_equipo = :id_equipo
-            WHERE id_inscripcion = :id_registro
-        """), {
-            "jugador": jugador,
-            "categoria": categoria,
-            "fecha": fecha,
-            "estado": estado,
-            "monto": float(monto) if monto else 0,  # Convertir a float o establecer como 0 si está vacío
-            "metodo_pago": metodo_pago,
-            "observaciones": observaciones,
-            "id_equipo": int(id_equipo) if id_equipo else None,  # Si no se selecciona un equipo, establecer como NULL
-            "id_registro": id_registro
-        })
-        conn.commit()  # Confirmar los cambios
-        return jsonify({"success": True, "message": "Registro actualizado correctamente."})
-    except Exception as e:
-        conn.rollback()
-        print(f"Error detallado: {str(e)}")  # Imprime el error en la terminal
-        return jsonify({"success": False, "message": f"Error al actualizar el registro: {str(e)}"})
-    finally:
-        conn.close()
+        # Consulta para obtener el id_equipo basado en el nombre_equipo
+        nombre_equipo = data.get("nombre_equipo")
+        if nombre_equipo:
+            equipo_query = "SELECT id_equipo FROM equipo_pagos WHERE nombre_equipo = :nombre_equipo"
+            equipo_result = conn.execute(text(equipo_query), {"nombre_equipo": nombre_equipo}).fetchone()
+            if equipo_result:
+                data["id_equipo"] = equipo_result.id_equipo  # Agregar id_equipo a los datos
+            else:
+                return jsonify({"success": False, "message": "El nombre del equipo no existe en la base de datos."})
 
-@app.route('/editar_registro', methods=['POST'])
-def editar_registro():
-    id_registro = request.form.get('id_registro')
-    jugador = request.form.get('jugador_editar')
-    categoria = request.form.get('categoria_editar')
-    fecha = request.form.get('fecha_editar')
-    estado = request.form.get('estado_editar')
-    monto = request.form.get('monto_editar')  # Añadido para manejar el monto
-    metodo_pago = request.form.get('metodo_pago_editar')  # Añadido para manejar el método de pago
-    observaciones = request.form.get('observaciones_editar')  # Añadido para manejar observaciones
-    id_equipo = request.form.get('equipo_editar')  # Añadido para manejar el ID del equipo
+        if tipo == 'tarjeta':
+            query = """
+                UPDATE pago_tarjetas 
+                SET nombre_equipo = :nombre_equipo, jugador = :jugador, categoria = :categoria, 
+                    tarjetas_rojas = :tarjetas_rojas, tarjetas_amarillas = :tarjetas_amarillas, 
+                    observaciones = :observaciones, metodo_pago = :metodo_pago, 
+                    fecha_cobro = :fecha_cobro, estado_pago = :estado_pago, id_equipo = :id_equipo
+                WHERE id_pago = :id
+            """
+        elif tipo == 'inscripcion':
+            query = """
+                UPDATE pago_inscripcion 
+                SET nombre_equipo = :nombre_equipo, jugador = :jugador, categoria = :categoria, 
+                    monto_a_cobrar = :monto_a_cobrar, observaciones = :observaciones, 
+                    metodo_pago = :metodo_pago, fecha_inscripcion = :fecha_inscripcion, estado_pago = :estado_pago, id_equipo = :id_equipo
+                WHERE id_inscripcion = :id
+            """
+        else:
+            return jsonify({"success": False, "message": "Tipo de registro no válido"})
 
-    conn = get_db_connection()
-    try:
-        conn.execute(text("""
-        UPDATE pago_inscripcion
-        SET jugador = :jugador, categoria = :categoria, fecha_inscripcion = :fecha,
-            estado_pago = :estado, monto_a_cobrar = :monto, metodo_pago = :metodo_pago,
-            observaciones = :observaciones, id_equipo = :id_equipo
-        WHERE id_inscripcion = :id_registro
-        """), {
-            "jugador": jugador,
-            "categoria": categoria,
-            "fecha": fecha,
-            "estado": estado,
-            "monto": monto,
-            "metodo_pago": metodo_pago,
-            "observaciones": observaciones,
-            "id_equipo": id_equipo or None,  # Si no se selecciona un equipo, establecer como NULL
-            "id_registro": id_registro
-        })
-        conn.commit()  # Confirmar los cambios
-        return jsonify({"success": True, "message": "Registro actualizado correctamente."})
+        # Ejecutar la consulta
+        conn.execute(text(query), {**data, "id": id})
+        conn.commit()
+        return jsonify({"success": True, "message": "Registro actualizado correctamente"})
     except Exception as e:
-        conn.rollback()
         return jsonify({"success": False, "message": str(e)})
     finally:
         conn.close()
-
 
 @app.route('/reporte_semanal')
 def reporte_semanal():
@@ -629,7 +579,7 @@ def reporte_semanal():
     try:
         # Tarjetas
         query_tarjetas = """
-            
+
         SELECT pt.*, ep.nombre_equipo
                     FROM pago_tarjetas pt
                     LEFT JOIN equipo_pagos ep ON pt.id_equipo = ep.id_equipo

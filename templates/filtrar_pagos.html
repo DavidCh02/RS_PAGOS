@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% block content %}
 <style>
     body {
@@ -9,17 +8,13 @@
         padding: 0;
         color: #f0f0f0;
     }
-
-    h1, h2 {
+    h1, h2, h3 {
         text-align: center;
         color: #f6f2f2;
     }
-
     h3 {
         color: #ffcc00;
-        text-align: center;
     }
-
     form {
         background: #2a2a2a;
         color: #ddd;
@@ -29,17 +24,11 @@
         margin: 20px auto;
         box-shadow: 0px 4px 8px rgba(255, 204, 0, 0.2);
     }
-
     label {
         display: block;
         margin-bottom: 10px;
     }
-
-    input[type="text"],
-    input[type="date"],
-    input[type="number"],
-    select,
-    textarea {
+    input, select, textarea {
         width: 100%;
         padding: 10px;
         margin-bottom: 15px;
@@ -49,34 +38,24 @@
         color: #ddd;
         box-sizing: border-box;
     }
-
     table {
         width: 100%;
         border-collapse: collapse;
         background: #3a3a3a;
         color: #ddd;
         border-radius: 10px;
-        overflow: hidden;
         margin-bottom: 20px;
         box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
     }
-
     th, td {
         padding: 12px;
         border: 1px solid #555;
         text-align: left;
     }
-
     th {
         background: #555;
         color: #eee;
-        text-align: center;
     }
-
-    tbody tr:nth-child(even) {
-        background-color: #4a4a4a;
-    }
-
     button {
         background: #ffcc00;
         color: #333;
@@ -85,80 +64,47 @@
         cursor: pointer;
         border-radius: 5px;
         font-weight: bold;
-        transition: background 0.3s;
-        display: inline-block;
         margin: 5px;
     }
-
     button:hover {
         background: #e6b800;
     }
-
     .container {
         width: 95%;
         max-width: 1200px;
         margin: auto;
-        overflow: hidden;
         padding: 20px;
     }
-
-    /* Estilos para tablas despegables */
-    .table-container {
-        position: relative;
-    }
-
-    .table-preview {
-        position: absolute;
+    .modal {
+        position: fixed;
         top: 0;
         left: 0;
+        z-index: 999;
+        background: rgba(0, 0, 0, 0.7);
         width: 100%;
         height: 100%;
-        background-color: rgba(0, 0, 0, 0.8);
-        color: #fff;
-        display: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .modal-content {
+        background: #2a2a2a;
         padding: 20px;
-        box-sizing: border-box;
-        border-radius: 10px;
-        z-index: 10;
-        overflow: auto; /* Agregado para contenido largo */
+        border-radius: 8px;
+        max-width: 600px;
+        width: 90%;
     }
-
-    .table-preview h4 {
-        color: #ffcc00;
-        margin-bottom: 10px;
-        text-align: center;
-    }
-
-    .table-preview p {
-        margin-bottom: 5px;
-    }
-
-    .table-preview-close {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        cursor: pointer;
-        color: #fff;
-    }
-
-    /* Estilos para dispositivos móviles */
-    @media (max-width: 768px) {
-        table {
-            font-size: 14px;
-            overflow-x: auto;
-            display: block;
-            white-space: nowrap;
+    @media (max-width: 480px) {
+        form, .modal-content {
+            padding: 15px;
         }
-
-        th, td {
-            padding: 8px;
+        label, input, select, textarea, button {
+            font-size: 14px;
         }
     }
 </style>
-
 <div class="container">
     <h1>Filtrar Pagos</h1>
-
     <!-- Formulario para filtrar pagos -->
     <form method="POST" class="filter-form">
         <div class="form-group">
@@ -168,12 +114,10 @@
                 <option value="partido">Por número de partido</option>
             </select>
         </div>
-
         <div id="busqueda_fecha" class="form-group">
             <label for="fecha_cliente">Fecha:</label>
             <input type="date" name="fecha_cliente" class="form-control">
         </div>
-
         <div id="busqueda_partido" class="form-group" style="display: none;">
             <label for="numero_partido">Número de Partido:</label>
             <select name="numero_partido" class="form-control">
@@ -193,7 +137,6 @@
                 <option value="Final">Final</option>
             </select>
         </div>
-
         <div class="form-group">
             <label for="estado_pago">Estado del pago:</label>
             <select name="estado_pago" class="form-control">
@@ -202,15 +145,12 @@
                 <option value="Pagado">Pagado</option>
             </select>
         </div>
-
         <button type="submit" class="btn btn-primary">Filtrar</button>
     </form>
-
     <script>
     document.getElementById('tipo_busqueda').addEventListener('change', function() {
         const busquedaFecha = document.getElementById('busqueda_fecha');
         const busquedaPartido = document.getElementById('busqueda_partido');
-        
         if (this.value === 'fecha') {
             busquedaFecha.style.display = 'block';
             busquedaPartido.style.display = 'none';
@@ -220,11 +160,9 @@
         }
     });
     </script>
-
     <!-- Mostrar resultados filtrados -->
     {% if pagos_tarjetas or pagos_inscripciones %}
     <h2>Pagos Filtrados</h2>
-
     <!-- Pagos de tarjetas -->
     {% if pagos_tarjetas %}
     <h3>Pagos de Tarjetas</h3>
@@ -259,30 +197,16 @@
                     <td>{{ pago.fecha_cobro }}</td>
                     <td>{{ pago.estado_pago }}</td>
                     <td>
-                        <!-- Botón para eliminar pagos de tarjetas -->
+                        <button onclick="editarPago('{{ pago.id_pago }}', 'tarjeta')">Editar</button>
                         <button onclick="eliminarPago('{{ pago.id_pago }}', 'tarjeta')">Eliminar</button>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-        <div class="table-preview" id="tabla-tarjetas-preview">
-            <h4>Vista Previa de Pago de Tarjeta</h4>
-            <span class="table-preview-close">×</span>
-            <p><strong>ID:</strong> <span id="preview-id"></span></p>
-            <p><strong>Jugador:</strong> <span id="preview-jugador"></span></p>
-            <p><strong>Categoría:</strong> <span id="preview-categoria"></span></p>
-            <p><strong>Tarjetas Rojas:</strong> <span id="preview-tarjetas-rojas"></span></p>
-            <p><strong>Tarjetas Amarillas:</strong> <span id="preview-tarjetas-amarillas"></span></p>
-            <p><strong>Valor Total:</strong> <span id="preview-valor-total"></span></p>
-            <p><strong>Observaciones:</strong> <span id="preview-observaciones"></span></p>
-            <p><strong>Método de Pago:</strong> <span id="preview-metodo-pago"></span></p>
-            <p><strong>Fecha de Pago:</strong> <span id="preview-fecha-pago"></span></p>
-            <p><strong>Estado:</strong> <span id="preview-estado"></span></p>
-        </div>
+
     </div>
     {% endif %}
-
     <!-- Pagos de inscripciones -->
     {% if pagos_inscripciones %}
     <h3>Pagos de Inscripciones</h3>
@@ -313,110 +237,172 @@
                     <td>{{ pago.fecha_inscripcion }}</td>
                     <td>{{ pago.estado_pago }}</td>
                     <td>
-                        <!-- Botón para eliminar pagos de inscripciones -->
+                        <button onclick="editarPago('{{ pago.id_inscripcion }}', 'inscripcion')">Editar</button>
                         <button onclick="eliminarPago('{{ pago.id_inscripcion }}', 'inscripcion')">Eliminar</button>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-        <div class="table-preview" id="tabla-inscripciones-preview">
-            <h4>Vista Previa de Pago de Inscripción</h4>
-            <span class="table-preview-close">×</span>
-            <p><strong>ID:</strong> <span id="preview-id-inscripcion"></span></p>
-            <p><strong>Jugador/Equipo:</strong> <span id="preview-jugador-equipo"></span></p>
-            <p><strong>Categoría:</strong> <span id="preview-categoria-inscripcion"></span></p>
-            <p><strong>Monto a Cobrar:</strong> <span id="preview-monto-cobrar"></span></p>
-            <p><strong>Observaciones:</strong> <span id="preview-observaciones-inscripcion"></span></p>
-            <p><strong>Método de Pago:</strong> <span id="preview-metodo-pago-inscripcion"></span></p>
-            <p><strong>Fecha de Inscripción:</strong> <span id="preview-fecha-inscripcion"></span></p>
-            <p><strong>Estado:</strong> <span id="preview-estado-inscripcion"></span></p>
         </div>
-    </div>
     {% endif %} {% else %}
     <p>No se encontraron pagos con los filtros seleccionados.</p>
     {% endif %}
 </div>
+<div id="editar-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close" onclick="cerrarModal()">&times;</span>
+        <h2>Editar Registro</h2>
+        <form id="editar-form">
+            <!-- Campos ocultos -->
+            <input type="hidden" id="editar-id" name="id">
+            <input type="hidden" id="editar-tipo" name="tipo">
 
-{% endblock %} {% block scripts %}
+            <!-- Nombre del Equipo -->
+            <label for="editar-nombre-equipo">Nombre Equipo:</label>
+            <select id="editar-nombre-equipo" name="nombre_equipo">
+                {% for equipo in equipos_existentes.values() %}
+                    <option value="{{ equipo }}">{{ equipo }}</option>
+                {% endfor %}
+            </select>
+
+            <!-- Jugador -->
+            <label for="editar-jugador">Jugador:</label>
+            <input type="text" id="editar-jugador" name="jugador">
+
+            <!-- Categoría -->
+            <label for="editar-categoria">Categoría:</label>
+            <select id="editar-categoria" name="categoria">
+                <option value="Abierta">Abierta</option>
+                <option value="+40">+40</option>
+                <option value="Femenina">Femenina</option>
+            </select>
+
+            <!-- Tarjetas Rojas -->
+            <label for="editar-tarjetas-rojas">Tarjetas Rojas:</label>
+            <input type="number" id="editar-tarjetas-rojas" name="tarjetas_rojas">
+
+            <!-- Tarjetas Amarillas -->
+            <label for="editar-tarjetas-amarillas">Tarjetas Amarillas:</label>
+            <input type="number" id="editar-tarjetas-amarillas" name="tarjetas_amarillas">
+
+            <!-- Observaciones -->
+            <label for="editar-observaciones">Observaciones:</label>
+            <textarea id="editar-observaciones" name="observaciones"></textarea>
+
+            <!-- Método de Pago -->
+            <label for="editar-metodo-pago">Método de Pago:</label>
+            <select id="editar-metodo-pago" name="metodo_pago">
+                <option value="Efectivo">Efectivo</option>
+                <option value="Transferencia">Transferencia</option>
+            </select>
+
+            <!-- Fecha de Pago -->
+            <label for="editar-fecha-pago">Fecha de Pago:</label>
+            <input type="date" id="editar-fecha-pago" name="fecha_cobro">
+
+            <!-- Estado -->
+            <label for="editar-estado">Estado:</label>
+            <select id="editar-estado" name="estado_pago">
+                <option value="Pendiente">Pendiente</option>
+                <option value="Pagado">Pagado</option>
+            </select>
+
+            <!-- Botón Guardar -->
+            <button type="button" onclick="guardarEdicion()">Guardar Cambios</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
 <script>
-    // JavaScript para mostrar/ocultar la vista previa de la tabla
-    document.querySelectorAll(".table-container table").forEach((table) => {
-        table.addEventListener("click", (event) => {
-            const tableId = table.id;
-            const previewId = tableId + "-preview";
-            const preview = document.getElementById(previewId);
-             if (preview) {
+function setSelectValue(id, value) {
+    const select = document.getElementById(id);
+    const exists = [...select.options].some(opt => opt.value === value);
+    if (!exists && value) {
+        select.add(new Option(value, value, true, true));
+    }
+    select.value = value;
+}
 
-                  // Cargar datos en la vista previa
-                if (tableId === "tabla-tarjetas") {
-                    const row = event.target.closest("tr");
-                     if (row) {
-                    document.getElementById("preview-id").textContent = row.cells[0].textContent;
-                    document.getElementById("preview-jugador").textContent = row.cells[1].textContent;
-                    document.getElementById("preview-categoria").textContent = row.cells[2].textContent;
-                    document.getElementById("preview-tarjetas-rojas").textContent = row.cells[3].textContent;
-                    document.getElementById("preview-tarjetas-amarillas").textContent = row.cells[4].textContent;
-                    document.getElementById("preview-valor-total").textContent = row.cells[5].textContent;
-                    document.getElementById("preview-observaciones").textContent = row.cells[6].textContent;
-                    document.getElementById("preview-metodo-pago").textContent = row.cells[7].textContent;
-                    document.getElementById("preview-fecha-pago").textContent = row.cells[8].textContent;
-                    document.getElementById("preview-estado").textContent = row.cells[9].textContent;
-                    }
-                } else if (tableId === "tabla-inscripciones") {
-                    const row = event.target.closest("tr");
-                     if (row) {
-                        document.getElementById("preview-id-inscripcion").textContent = row.cells[0].textContent;
-                        document.getElementById("preview-jugador-equipo").textContent = row.cells[1].textContent;
-                        document.getElementById("preview-categoria-inscripcion").textContent = row.cells[2].textContent;
-                        document.getElementById("preview-monto-cobrar").textContent = row.cells[3].textContent;
-                        document.getElementById("preview-observaciones-inscripcion").textContent = row.cells[4].textContent;
-                        document.getElementById("preview-metodo-pago-inscripcion").textContent = row.cells[5].textContent;
-                        document.getElementById("preview-fecha-inscripcion").textContent = row.cells[6].textContent;
-                        document.getElementById("preview-estado-inscripcion").textContent = row.cells[7].textContent;
-                    }
+    // Función para editar un registro
+    function editarPago(id, tipo) {
+        fetch(`/editar_registro/${tipo}/${id}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const registro = data.data;
+
+                    // Llenar los campos del formulario con los datos actuales
+                    document.getElementById("editar-id").value = id;
+                    document.getElementById("editar-tipo").value = tipo;
+
+                    // Nombre del Equipo
+                    const nombreEquipoSelect = document.getElementById("editar-nombre-equipo");
+                    nombreEquipoSelect.value = registro.nombre_equipo || "";
+
+                    // Jugador
+                    document.getElementById("editar-jugador").value = registro.jugador || "";
+
+                    // Categoría
+                    const categoriaSelect = document.getElementById("editar-categoria");
+                    categoriaSelect.value = registro.categoria || "";
+
+                    // Tarjetas Rojas
+                    document.getElementById("editar-tarjetas-rojas").value = registro.tarjetas_rojas || "";
+
+                    // Tarjetas Amarillas
+                    document.getElementById("editar-tarjetas-amarillas").value = registro.tarjetas_amarillas || "";
+
+                    // Observaciones
+                    document.getElementById("editar-observaciones").value = registro.observaciones || "";
+
+                    // Método de Pago
+                    const metodoPagoSelect = document.getElementById("editar-metodo-pago");
+                    metodoPagoSelect.value = registro.metodo_pago || "";
+
+                    // Fecha de Pago
+                    document.getElementById("editar-fecha-pago").value = registro.fecha_cobro || "";
+
+                    // Estado
+                    const estadoPagoSelect = document.getElementById("editar-estado");
+                    estadoPagoSelect.value = registro.estado_pago || "";
+
+                    // Mostrar el modal de edición
+                    document.getElementById("editar-modal").style.display = "block";
+                } else {
+                    alert(data.message);
                 }
+            })
+            .catch(error => console.error("Error:", error));
+    }
 
-                preview.style.display = "block";
-             }
-        });
-    });
+    // Función para cerrar el modal
+    function cerrarModal() {
+        document.getElementById("editar-modal").style.display = "none";
+    }
 
-    // Cerrar la vista previa
-    document.querySelectorAll(".table-preview-close").forEach((closeButton) => {
-        closeButton.addEventListener("click", (event) => {
-            event.stopPropagation();
-            const preview = closeButton.closest(".table-preview");
-             if (preview) {
-                preview.style.display = "none";
-             }
-        });
-    });
+    // Función para guardar los cambios
+    function guardarEdicion() {
+        const formData = new FormData(document.getElementById("editar-form"));
+        const tipo = formData.get("tipo");
+        const id = formData.get("id");
 
-    // Evitar que el clic en la vista previa se propague a la tabla subyacente
-    document.querySelectorAll(".table-preview").forEach((preview) => {
-        preview.addEventListener("click", (event) => {
-            event.stopPropagation();
-        });
-    });
-
-    // Función para eliminar un registro
-    function eliminarPago(id, tipo) {
-        if (confirm("¿Estás seguro de eliminar este registro?")) {
-            fetch(`/eliminar_registro?id=${encodeURIComponent(id)}&tipo=${encodeURIComponent(tipo)}`, {
-                    method: "DELETE",
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert("Registro eliminado correctamente.");
-                        window.location.reload(); // Recargar la página
-                    } else {
-                        alert("Error al eliminar el registro.");
-                    }
-                })
-                .catch(error => console.error("Error:", error));
-        }
+        fetch(`/actualizar_registro/${tipo}/${id}`, {
+            method: "POST",
+            body: new URLSearchParams(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Registro actualizado correctamente");
+                window.location.reload();
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => console.error("Error:", error));
     }
 </script>
 {% endblock %}
