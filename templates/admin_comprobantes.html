@@ -2,15 +2,116 @@
 <html>
 <head>
     <title>Administración de Comprobantes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
-        .modal-img {
-            max-width: 100%;
-            height: auto;
+        :root {
+            --primary-color: #ffd700;
+            --secondary-color: #000000;
+            --accent-color: #ffd700;
+            --text-light: #ffffff;
+            --text-dark: #000000;
         }
+
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            max-width: 1400px;
+        }
+
+        h2 {
+            color: var(--secondary-color);
+            border-bottom: 3px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+
+        .table {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .table thead th {
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+            border: none;
+            white-space: nowrap;
+        }
+
         .preview-thumbnail {
             max-width: 100px;
+            border-radius: 5px;
+            transition: transform 0.3s ease;
             cursor: pointer;
+        }
+
+        .preview-thumbnail:hover {
+            transform: scale(1.1);
+        }
+
+        .btn-success {
+            background-color: var(--primary-color);
+            border-color: var(--secondary-color);
+            color: var(--secondary-color);
+        }
+
+        .btn-danger {
+            background-color: var(--secondary-color);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .modal-content {
+            border-radius: 15px;
+            border: none;
+        }
+
+        .modal-header {
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+            border-radius: 15px 15px 0 0;
+        }
+
+        .badge {
+            padding: 8px 12px;
+            border-radius: 20px;
+        }
+
+        .badge-success {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+        }
+
+        @media (max-width: 768px) {
+            .table {
+                display: block;
+                overflow-x: auto;
+            }
+
+            .container {
+                padding: 10px;
+            }
+
+            .btn {
+                padding: 5px 10px;
+                font-size: 12px;
+            }
+
+            .preview-thumbnail {
+                max-width: 60px;
+            }
+
+            .table td {
+                min-width: 100px;
+            }
+
+            .modal-dialog {
+                margin: 10px;
+            }
         }
     </style>
 </head>
@@ -102,6 +203,7 @@
     </div>
 
     <!-- Modal para mostrar la imagen -->
+    <!-- Update the image modal -->
     <div class="modal fade" id="imagenModal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -114,10 +216,45 @@
                 <div class="modal-body text-center">
                     <img id="imagenCompleta" src="" class="modal-img" alt="Comprobante completo">
                 </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="toggleZoom()">
+                        <i class="fas fa-search-plus"></i> Zoom
+                    </button>
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">Cerrar</button>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Update the JavaScript section -->
+    <script>
+        function mostrarImagen(nombreArchivo, nombreEquipo) {
+            $('#imagenCompleta').attr('src', `/static/img/comprobantes/${nombreArchivo}`);
+            $('#equipoNombre').text(nombreEquipo);
+            $('#imagenModal').modal('show');
+            // Reset zoom state
+            $('#imagenCompleta').removeClass('img-zoomed');
+            $('.modal-body').removeClass('fullscreen');
+        }
+    
+        function toggleZoom() {
+            const img = $('#imagenCompleta');
+            const modalBody = $('.modal-body');
+            
+            if (img.hasClass('img-zoomed')) {
+                img.removeClass('img-zoomed');
+                modalBody.removeClass('fullscreen');
+            } else {
+                img.addClass('img-zoomed');
+                modalBody.addClass('fullscreen');
+            }
+        }
+    
+        // Add click handler to image for toggling zoom
+        $(document).on('click', '.modal-img', function() {
+            toggleZoom();
+        });
+    </script>
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -149,12 +286,49 @@ function verificarComprobante(id, estado) {
         }
     });
 }
-function mostrarImagen(nombreArchivo, nombreEquipo) {
-    $('#imagenCompleta').attr('src', `/static/img/comprobantes/${nombreArchivo}`);
-    $('#equipoNombre').text(nombreEquipo);
-    $('#imagenModal').modal('show');
-}
 </script>
-    </script>
 </body>
 </html>
+
+<style>
+    .modal-img {
+        max-width: 100%;
+        max-height: 70vh;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        margin: 0 auto;
+        display: block;
+    }
+
+    .modal-dialog.modal-lg {
+        max-width: 80%;
+        margin: 20px auto;
+    }
+
+    .modal-body {
+        padding: 15px;
+        background-color: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 200px;
+    }
+
+    .img-zoomed {
+        max-height: 90vh;
+        max-width: 90vw;
+        cursor: zoom-out;
+    }
+
+    @media (max-width: 768px) {
+        .modal-dialog.modal-lg {
+            max-width: 95%;
+            margin: 10px;
+        }
+
+        .modal-img {
+            max-height: 60vh;
+        }
+    }
+</style>
