@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pago de Tarjetas</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .team-card {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .team-card:hover {
+            transform: scale(1.02);
+        }
+        .custom-control {
+            margin-bottom: 10px;
+        }
+        .jugador-checkbox:checked + label {
+            color: #007bff;
+            font-weight: bold;
+        }
+
+            .custom-control-input {
+                position: absolute;
+                z-index: -1;
+                opacity: 0;
+            }
+
+            .custom-control-label {
+                position: relative;
+                margin-bottom: 0;
+                vertical-align: top;
+                padding-left: 1.5rem;
+                cursor: pointer;
+            }
+
+            .custom-control-label::before {
+                position: absolute;
+                top: 0.25rem;
+                left: 0;
+                display: block;
+                width: 1rem;
+                height: 1rem;
+                content: "";
+                background-color: #fff;
+                border: 1px solid #adb5bd;
+                border-radius: 0.25rem;
+            }
+
+            .custom-control-input:checked ~ .custom-control-label::before {
+                color: #fff;
+                border-color: #007bff;
+                background-color: #007bff;
+            }
+
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h2 class="mb-4">Equipos con Tarjetas Pendientes</h2>
+        
+        <div class="row">
+            {% for equipo in equipos %}
+            <div class="col-md-4 mb-4">
+                <div class="card team-card" onclick="showTeamDetails({{ equipo.id_equipo }})">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ equipo.nombre_equipo }}</h5>
+                        <p class="card-text">Categoría: {{ equipo.categoria }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Modal for team details -->
+    <div class="modal fade" id="teamModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalles del Equipo</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="jugadoresList"></div>
+                    <div class="d-flex justify-content-end mb-3">
+                        <button type="button" class="btn btn-info mr-2" onclick="togglePagoPersonalizado()">
+                            Pago Personalizado
+                        </button>
+                    </div>
+                    
+                    <!-- Personalized payment section -->
+                    <div id="pagoPersonalizadoSection" style="display: none;">
+                        <hr>
+                        <h5>Seleccionar Jugadores para Pago</h5>
+                        <div id="jugadoresSeleccion" class="mb-3"></div>
+                        <div class="alert alert-info">
+                            Total Seleccionado: $<span id="totalSeleccionado">0</span>
+                        </div>
+                    </div>
+
+                    <hr>
+                    <div class="bank-details mt-4">
+                        <h5>Datos Bancarios</h5>
+                        <p>Banco: {{ datos_bancarios.banco }}</p>
+                        <p>Tipo de Cuenta: {{ datos_bancarios.tipo_cuenta }}</p>
+                        <p>Número de Cuenta: {{ datos_bancarios.numero_cuenta }}</p>
+                        <p>Titular: {{ datos_bancarios.titular }}</p>
+                        <p>RUT: {{ datos_bancarios.rut }}</p>
+                    </div>
+
+                    <form id="comprobantePagoForm" class="mt-4">
+                        <input type="hidden" id="equipoId" name="equipo_id">
+                        <div class="form-group">
+                            <label>Subir Comprobante de Pago</label>
+                            <input type="file" class="form-control-file" id="comprobante" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Enviar Comprobante</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+let currentCategoria, currentPartido;
+
+function showTeamDetails(equipoId) {
+    $.get(`/get_jugadores_tarjetas/${equipoId}`, function(data) {
+        currentCategoria = data.categoria;
+        currentPartido = data.numero_partido;
+
+        let statusHtml = '';
+        if (data.comprobante_enviado) {
+            switch (data.comprobante_estado) {
+                case 'Pendiente':
+                    statusHtml = '<div class="alert alert-warning">Comprobante enviado. Esperando aprobación.</div>';
+                    break;
+                case 'Rechazado':
+                    statusHtml = `<div class="alert alert-danger">Comprobante rechazado: ${data.motivo_rechazo}</div>`;
+                    break;
+                case 'Aprobado':
+                    statusHtml = '<div class="alert alert-success">Comprobante aprobado. Pago realizado.</div>';
+                    break;
+            }
+        }
+
+        let html = `<h4>${data.nombre_equipo}</h4>${statusHtml}` +
+                   `<table class="table">
+                        <thead>
+                            <tr>
+                                <th>Jugador</th>
+                                <th>Amarillas</th>
+                                <th>Rojas</th>
+                                <th>Monto</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
+        data.jugadores.forEach(function(j) {
+            const highlight = j.enviado && data.comprobante_estado !== 'Rechazado';
+            html += `
+                <tr${highlight ? ' style="background-color:#d4edda;"' : ''}>
+                    <td>${j.jugador}${highlight ? ' <span class="badge badge-success">Enviado</span>' : ''}</td>
+                    <td>${j.tarjetas_amarillas}</td>
+                    <td>${j.tarjetas_rojas}</td>
+                    <td>$${j.monto}</td>
+                </tr>`;
+        });
+
+        html += `</tbody></table><h5>Total: $${data.total}</h5>`;
+        $('#jugadoresList').html(html);
+        $('#equipoId').val(equipoId);
+
+        // Mostrar checkboxes solo si hay jugadores sin enviar
+        let selectionHtml = '<div class="custom-controls-stacked">';
+        data.jugadores.forEach(function(j, index) {
+            if (!j.enviado || data.comprobante_estado === 'Rechazado') {
+                selectionHtml += `
+                    <div class="custom-control custom-checkbox">
+                        <input type="checkbox" class="custom-control-input jugador-checkbox" id="jugador_${j.id_pago}" data-id_pago="${j.id_pago}" data-nombre="${j.jugador}" data-monto="${j.monto}">
+                        <label class="custom-control-label" for="jugador_${j.id_pago}">${j.jugador} - $${j.monto}</label>
+                    </div>`;
+            }
+        });
+        selectionHtml += '</div>';
+        $('#jugadoresSeleccion').html(selectionHtml);
+
+        $('#teamModal').modal('show');
+    });
+}
+
+$('#comprobantePagoForm').submit(function(e) {
+    e.preventDefault();
+
+    const tipoPago = $('#pagoPersonalizadoSection').is(':visible') ? 'personalizado' : 'completo';
+    let jugadores = [];
+    if (tipoPago === 'personalizado') {
+        $('.jugador-checkbox:checked').each(function() {
+            jugadores.push({
+                id_pago: $(this).data('id_pago'),  // Asegurarte de que sea id_pago
+                nombre: $(this).data('nombre'),
+                monto: $(this).data('monto')
+            });
+        });
+        if (!jugadores.length) {
+            return alert('Seleccione al menos un jugador');
+        }
+    }
+
+    const montoTotal = jugadores.length
+                      ? jugadores.reduce((s, j) => s + j.monto, 0)
+                      : parseFloat($('#jugadoresList h5').text().replace(/[^0-9\.]/g, ''));
+
+    let formData = new FormData();
+    formData.append('comprobante', $('#comprobante')[0].files[0]);
+    formData.append('equipo_id', $('#equipoId').val());
+    formData.append('tipo_pago', tipoPago);
+    formData.append('jugadores_seleccionados', JSON.stringify(jugadores));
+    formData.append('monto', montoTotal.toFixed(2));
+    formData.append('categoria', currentCategoria);
+    formData.append('numero_partido', currentPartido);
+
+    $.ajax({
+        url: '/subir_comprobante',
+        method: 'POST',
+        data: formData,
+        processData: false,
+        contentType: false,
+        success(resp) {
+            if (resp.success) {
+                alert('Comprobante subido');
+                $('#teamModal').modal('hide');
+                location.reload();
+            } else {
+                alert('Error: ' + resp.message);
+            }
+        },
+        error() {
+            alert('Error al subir');
+        }
+    });
+});
+function togglePagoPersonalizado() {
+    const section = $('#pagoPersonalizadoSection');
+    section.slideToggle();
+
+    // Update the form type
+    const isPersonalizado = section.is(':visible');
+    $('#tipoPago').val(isPersonalizado ? 'personalizado' : 'completo');
+
+    // Reset selections when hiding
+    if (!isPersonalizado) {
+        $('.jugador-checkbox').prop('checked', false);
+        $('#totalSeleccionado').text('0');
+        $('#jugadoresSeleccionados').val('');
+    }
+}
+
+$(document).on('change', '.jugador-checkbox', function() {
+    let total = 0;
+    let selectedJugadores = [];
+    $('.jugador-checkbox:checked').each(function() {
+        total += parseFloat($(this).data('monto'));
+        selectedJugadores.push({
+            id: $(this).data('id'),
+            nombre: $(this).data('nombre'),
+            monto: $(this).data('monto')
+        });
+    });
+    $('#totalSeleccionado').text(total.toFixed(2));
+    $('#jugadoresSeleccionados').val(JSON.stringify(selectedJugadores));
+});
+</script>
+</body>
+</html>

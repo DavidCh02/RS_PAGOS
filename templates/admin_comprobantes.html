@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Administración de Comprobantes</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .modal-img {
+            max-width: 100%;
+            height: auto;
+        }
+        .preview-thumbnail {
+            max-width: 100px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h2>Comprobantes de Pago</h2>
+        
+        <!-- Update the table headers -->
+        <table class="table mt-4">
+            <thead>
+                <tr>
+                    <th>Equipo</th>
+                    <th>Categoría</th>
+                    <th>N° Partido</th>
+                    <th>Fecha de Subida</th>
+                    <th>Tipo de Pago</th>
+                    <th>Jugadores</th>
+                    <th>Monto Total</th>
+                    <th>Comprobante</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+
+            <tbody>
+{% for comprobante in comprobantes %}
+<tr>
+    <td>{{ comprobante.nombre_equipo }}</td>
+    <td>{{ comprobante.categoria or '—' }}</td>
+    <td>{{ comprobante.numero_partido or '—' }}</td>
+    <td>{{ comprobante.fecha_subida.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+    <td>
+        {% if comprobante.tipo_pago == 'personalizado' %}
+            <span class="text-primary">Personalizado</span>
+        {% elif comprobante.tipo_pago == 'completo' %}
+            <span class="text-success">Equipo Completo</span>
+        {% else %}
+            <span class="text-muted">Desconocido</span>
+        {% endif %}
+    </td>
+    <td>
+        {% if comprobante.tipo_pago == 'personalizado' and comprobante.jugadores_seleccionados %}
+            {% for jugador in comprobante.jugadores_seleccionados %}
+                <div>
+                    <strong>{{ jugador.nombre }}</strong> — ${{ jugador.monto }}
+                    {% if comprobante.estado == 'Aprobado' %}
+                        <span class="badge badge-success ml-1">Pagado</span>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% elif comprobante.tipo_pago == 'completo' %}
+            <span class="text-info">Equipo completo</span>
+        {% else %}
+            <span class="text-warning">Sin información</span>
+        {% endif %}
+    </td>
+    <td>${{ comprobante.monto or '0.00' }}</td>
+    <td>
+        <img src="/static/img/comprobantes/{{ comprobante.archivo }}"
+             class="preview-thumbnail"
+             onclick="mostrarImagen('{{ comprobante.archivo }}', '{{ comprobante.nombre_equipo }}')"
+             alt="Comprobante">
+<td>
+    {% if comprobante.estado == 'Pendiente' %}
+    <button class="btn btn-success btn-sm" onclick="verificarComprobante({{ comprobante.id }}, 'Aprobado')">
+        Aprobar
+    </button>
+    <button class="btn btn-danger btn-sm" onclick="verificarComprobante({{ comprobante.id }}, 'Rechazado')">
+        Rechazar
+    </button>
+    {% else %}
+        <span class="text-muted">Finalizado</span>
+    {% endif %}
+</td>
+
+</tr>
+{% endfor %}
+</tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="10" class="text-center">
+                        {% if not comprobantes %}
+                            <strong>No hay comprobantes para mostrar</strong>
+                        {% endif %}
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- Modal para mostrar la imagen -->
+    <div class="modal fade" id="imagenModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Comprobante de <span id="equipoNombre"></span></h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="imagenCompleta" src="" class="modal-img" alt="Comprobante completo">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        <!-- Update the verificarComprobante function -->
+function verificarComprobante(id, estado) {
+    let motivo = '';
+    if (estado === 'Rechazado') {
+        motivo = prompt('Ingrese el motivo de rechazo:');
+        if (!motivo) {
+            alert('Debes ingresar un motivo para el rechazo.');
+            return;
+        }
+    }
+    $.ajax({
+        url: '/verificar_comprobante',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify({ comprobante_id: id, estado: estado, motivo: motivo }),
+        success: function(resp) {
+            if (resp.success) {
+                alert('Comprobante actualizado');
+                location.reload();
+            } else {
+                alert('Error al verificar: ' + resp.message);
+            }
+        },
+        error: function() {
+            alert('Error de comunicación con el servidor');
+        }
+    });
+}
+function mostrarImagen(nombreArchivo, nombreEquipo) {
+    $('#imagenCompleta').attr('src', `/static/img/comprobantes/${nombreArchivo}`);
+    $('#equipoNombre').text(nombreEquipo);
+    $('#imagenModal').modal('show');
+}
+</script>
+    </script>
+</body>
+</html>

@@ -142,36 +142,58 @@
 
     /* Estilos para alternar colores por equipo */
     tr[data-team-color="color1"] td {
-        background-color: #e6f3ff;
+        background-color: #f5f9ff;
     }
 
     tr[data-team-color="color2"] td {
-        background-color: #fff2e6;
+        background-color: #fff9f5;
     }
 
     tr[data-team-color="color3"] td {
-        background-color: #e6fff2;
+        background-color: #f5fff9;
     }
 
     tr[data-team-color="color4"] td {
-        background-color: #ffe6f2;
+        background-color: #f9f5ff;
+    }
+
+    /* Estilos para input de observaciones */
+    .observaciones-input {
+        width: 100%;
+        padding: 4px 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: transparent;
+        font-family: inherit;
+        font-size: inherit;
+        color: inherit;
+    }
+
+    .observaciones-input:focus {
+        outline: none;
+        border-color: #2c96df;
+        background-color: #ffffff;
     }
 
     @media print {
         tr[data-team-color="color1"] td {
-            background-color: #f0f7ff;
+            background-color: #fafcff;
         }
 
         tr[data-team-color="color2"] td {
-            background-color: #fff7f0;
+            background-color: #fffcfa;
         }
 
         tr[data-team-color="color3"] td {
-            background-color: #f0fff7;
+            background-color: #fafffc;
         }
 
         tr[data-team-color="color4"] td {
-            background-color: #fff0f7;
+            background-color: #fcfaff;
+        }
+
+        .observaciones-input {
+            border: none;
         }
     }
 
@@ -246,36 +268,36 @@
             </tr>
         </thead>
         <tbody>
-            {% set current_equipo = namespace(value=None) %}
-            {% set current_categoria = namespace(value=None) %}
-            {% set rowspan_equipo = namespace(value=1) %}
-            {% set rowspan_categoria = namespace(value=1) %}
-            {% for pago in pagos.tarjetas %}
-                {% if current_equipo.value != pago.nombre_equipo %}
-                    {% set current_equipo.value = pago.nombre_equipo %}
-                    {% set rowspan_equipo.value = pagos.tarjetas|selectattr('nombre_equipo', 'equalto', pago.nombre_equipo)|list|length %}
-                    {% set team_color = loop.index % 4 + 1 %}
-                {% endif %}
-                {% if current_categoria.value != pago.categoria %}
-                    {% set current_categoria.value = pago.categoria %}
-                    {% set rowspan_categoria.value = pagos.tarjetas|selectattr('categoria', 'equalto', pago.categoria)|list|length %}
-                {% endif %}
-                <tr class="{{ 'pendiente' if pago.estado_pago != 'Pagado' }}" data-team-color="color{{ team_color }}">
-                    {% if loop.index0 == 0 or pagos.tarjetas[loop.index0 - 1].nombre_equipo != pago.nombre_equipo %}
-                        <td rowspan="{{ rowspan_equipo.value }}">{{ pago.nombre_equipo or '-' }}</td>
+            {% set ns = namespace(prev_equipo=None, prev_categoria=None) %}
+            {% for pago in pagos.tarjetas|sort(attribute='nombre_equipo')|sort(attribute='categoria') %}
+                {% set same_equipo = pago.nombre_equipo == ns.prev_equipo %}
+                {% set same_categoria = pago.categoria == ns.prev_categoria %}
+                {% set equipo_count = pagos.tarjetas|selectattr('nombre_equipo', 'equalto', pago.nombre_equipo)|list|length %}
+                {% set categoria_count = pagos.tarjetas|selectattr('nombre_equipo', 'equalto', pago.nombre_equipo)|selectattr('categoria', 'equalto', pago.categoria)|list|length %}
+                
+                <tr class="{{ 'pendiente' if pago.estado_pago != 'Pagado' }}" data-team-color="color{{ loop.index % 4 + 1 }}">
+                    {% if not same_equipo %}
+                        <td rowspan="{{ equipo_count }}">{{ pago.nombre_equipo or '-' }}</td>
+                        {% set ns.prev_equipo = pago.nombre_equipo %}
                     {% endif %}
-                    {% if loop.index0 == 0 or pagos.tarjetas[loop.index0 - 1].categoria != pago.categoria %}
-                        <td rowspan="{{ rowspan_categoria.value }}">{{ pago.categoria }}</td>
+                    
+                    {% if not same_equipo or not same_categoria %}
+                        <td rowspan="{{ categoria_count }}">{{ pago.categoria }}</td>
+                        {% set ns.prev_categoria = pago.categoria %}
                     {% endif %}
+                    
                     <td>{{ pago.jugador }}</td>
                     <td>
-                        Rojas: {{ pago.tarjetas_rojas }}<br>
-                        Amarillas: {{ pago.tarjetas_amarillas }}
+                        {% if pago.tarjetas_rojas is defined and pago.tarjetas_amarillas is defined %}
+                            Rojas: {{ pago.tarjetas_rojas }}<br>
+                            Amarillas: {{ pago.tarjetas_amarillas }}
+                        {% else %}
+                            No especificado
+                        {% endif %}
                     </td>
                     <td>${{ (pago.tarjetas_rojas * 4) + (pago.tarjetas_amarillas * 2) }}</td>
                     <td>{{ pago.estado_pago }}</td>
                     <td><input type="text" value="{{ pago.observaciones }}" ></td>
-
                 </tr>
             {% endfor %}
         </tbody>
@@ -288,37 +310,34 @@
     <table>
         <thead>
             <tr>
-                <th>Jugador/Equipo</th>
                 <th>Equipo</th>
                 <th>Categoría</th>
+                <th>Jugador</th>
                 <th>Monto</th>
                 <th>Estado</th>
                 <th>Observaciones</th>
             </tr>
         </thead>
         <tbody>
-            {% set current_equipo = namespace(value=None) %}
-            {% set current_categoria = namespace(value=None) %}
-            {% set rowspan_equipo = namespace(value=1) %}
-            {% set rowspan_categoria = namespace(value=1) %}
-            {% for pago in pagos.inscripciones %}
-                {% if current_equipo.value != pago.nombre_equipo %}
-                    {% set current_equipo.value = pago.nombre_equipo %}
-                    {% set rowspan_equipo.value = pagos.inscripciones|selectattr('nombre_equipo', 'equalto', pago.nombre_equipo)|list|length %}
-                    {% set team_color = loop.index % 4 + 1 %}
-                {% endif %}
-                {% if current_categoria.value != pago.categoria %}
-                    {% set current_categoria.value = pago.categoria %}
-                    {% set rowspan_categoria.value = pagos.inscripciones|selectattr('categoria', 'equalto', pago.categoria)|list|length %}
-                {% endif %}
-                <tr class="{{ 'pendiente' if pago.estado_pago != 'Pagado' }}" data-team-color="color{{ team_color }}">
-                    <td>{{ pago.nombre_equipo or pago.jugador }}</td>
-                    {% if loop.index0 == 0 or pagos.inscripciones[loop.index0 - 1].nombre_equipo != pago.nombre_equipo %}
-                        <td rowspan="{{ rowspan_equipo.value }}">{{ pago.nombre_equipo or '-' }}</td>
+            {% set ns = namespace(prev_equipo=None, prev_categoria=None) %}
+            {% for pago in pagos.inscripciones|sort(attribute='nombre_equipo')|sort(attribute='categoria') %}
+                {% set same_equipo = pago.nombre_equipo == ns.prev_equipo %}
+                {% set same_categoria = pago.categoria == ns.prev_categoria %}
+                {% set equipo_count = pagos.inscripciones|selectattr('nombre_equipo', 'equalto', pago.nombre_equipo)|list|length %}
+                {% set categoria_count = pagos.inscripciones|selectattr('nombre_equipo', 'equalto', pago.nombre_equipo)|selectattr('categoria', 'equalto', pago.categoria)|list|length %}
+                
+                <tr class="{{ 'pendiente' if pago.estado_pago != 'Pagado' }}" data-team-color="color{{ loop.index % 4 + 1 }}">
+                    {% if not same_equipo %}
+                        <td rowspan="{{ equipo_count }}">{{ pago.nombre_equipo or '-' }}</td>
+                        {% set ns.prev_equipo = pago.nombre_equipo %}
                     {% endif %}
-                    {% if loop.index0 == 0 or pagos.inscripciones[loop.index0 - 1].categoria != pago.categoria %}
-                        <td rowspan="{{ rowspan_categoria.value }}">{{ pago.categoria }}</td>
+                    
+                    {% if not same_equipo or not same_categoria %}
+                        <td rowspan="{{ categoria_count }}">{{ pago.categoria }}</td>
+                        {% set ns.prev_categoria = pago.categoria %}
                     {% endif %}
+                    
+                    <td>{{ pago.jugador }}</td>
                     <td>${{ pago.monto_a_cobrar }}</td>
                     <td>{{ pago.estado_pago }}</td>
                     <td><input type="text" value="{{ pago.observaciones }}" ></td>
@@ -409,3 +428,5 @@ function generatePDF() {
 }
 </script>
 {% endblock %}
+
+

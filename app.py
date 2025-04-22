@@ -10,7 +10,6 @@ app.secret_key = "supersecretkey"  # Clave secreta para usar flash()
 if __name__ == '__main__':
     app.run(debug=True)
 
-
 # Configuración de la base de datos
 DATABASE_URL = "postgresql+pg8000://rs_pagos_user:XnBxCpRwG7C4Cb6jKIzZ2Wta3NJoOdfI@dpg-cvrlids9c44c73d6113g-a.oregon-postgres.render.com/rs_pagos"
 engine = create_engine(DATABASE_URL)
@@ -35,7 +34,7 @@ def process_batch():
     conn = get_db_connection()
     try:
         data = request.get_json()
-        
+
         # Validar datos requeridos
         if not data or 'jugadores' not in data or not data['jugadores']:
             return jsonify({"success": False, "message": "No se proporcionaron datos de jugadores."})
@@ -106,6 +105,7 @@ def process_batch():
         return jsonify({"success": False, "message": str(e)})
     finally:
         conn.close()
+
 
 # Ruta principal
 @app.route('/')
@@ -363,8 +363,6 @@ import pytz
 
 from datetime import datetime, timedelta
 import pytz
-from datetime import datetime, timedelta
-import pytz
 
 from datetime import datetime, timedelta
 import pytz
@@ -583,7 +581,8 @@ def editar_registro(tipo, id):
 @app.route('/actualizar_registro/<tipo>/<id>', methods=['POST'])
 def actualizar_registro(tipo, id):
     # Obtener los datos del formulario
-    data = {key: value for key, value in request.form.items() if key != "valor_total_pagar"}  # Filtrar valor_total_pagar
+    data = {key: value for key, value in request.form.items() if
+            key != "valor_total_pagar"}  # Filtrar valor_total_pagar
     conn = get_db_connection()
     try:
         # Consulta para obtener el id_equipo basado en el nombre_equipo
@@ -624,6 +623,7 @@ def actualizar_registro(tipo, id):
         return jsonify({"success": False, "message": str(e)})
     finally:
         conn.close()
+
 
 @app.route('/reporte_semanal')
 def reporte_semanal():
@@ -736,3 +736,271 @@ def reporte_semanal():
                            total_general_pagadas=total_general_pagadas,
                            total_general=total_general
                            )
+
+
+@app.route('/tarjetas_equipos')
+def tarjetas_equipos():
+    conn = get_db_connection()
+    try:
+        # Get teams with pending card payments
+        result = conn.execute(text("""
+            SELECT DISTINCT ep.id_equipo, ep.nombre_equipo, pt.categoria
+            FROM equipo_pagos ep
+            JOIN pago_tarjetas pt ON ep.id_equipo = pt.id_equipo
+            WHERE pt.estado_pago = 'Pendiente'
+            GROUP BY ep.id_equipo, ep.nombre_equipo, pt.categoria
+        """))
+        equipos = result.fetchall()
+
+        # Get bank details from database or use static data
+        datos_bancarios = {
+            "banco": "Nombre del Banco",
+            "tipo_cuenta": "Cuenta Corriente",
+            "numero_cuenta": "XXXX-XXXX-XXXX-XXXX",
+            "titular": "Nombre del Titular",
+            "rut": "XX.XXX.XXX-X"
+        }
+
+        return render_template('tarjetas_equipos.html', equipos=equipos, datos_bancarios=datos_bancarios)
+    finally:
+        conn.close()
+
+
+
+@app.route('/get_jugadores_tarjetas/<int:equipo_id>')
+def get_jugadores_tarjetas(equipo_id):
+    conn = get_db_connection()
+    try:
+        # Datos del comprobante más reciente
+        comprobante_result = conn.execute(text("""
+            SELECT jugadores_seleccionados,
+                   tipo_pago,
+                   estado,
+                   motivo_rechazo
+            FROM comprobantes_pago
+            WHERE id_equipo = :equipo_id
+            ORDER BY fecha_subida DESC
+            LIMIT 1
+        """), {"equipo_id": equipo_id}).fetchone()
+
+        jugadores_enviados = []
+        est = None
+        motivo = ''
+        tipo_pago = None
+        if comprobante_result:
+            raw = comprobante_result.jugadores_seleccionados
+            jugadores_sel = json.loads(raw) if isinstance(raw, str) else raw
+            est = comprobante_result.estado
+            motivo = comprobante_result.motivo_rechazo or ''
+            if est in ('Pendiente', 'Aprobado'):
+                jugadores_enviados = [j['id_pago'] for j in jugadores_sel if j.get('id_pago')]
+            tipo_pago = comprobante_result.tipo_pago
+
+        # Obtención de jugadores pendientes
+        result = conn.execute(text("""
+            SELECT pt.*, ep.nombre_equipo
+            FROM pago_tarjetas pt
+            JOIN equipo_pagos ep ON pt.id_equipo = ep.id_equipo
+            WHERE pt.id_equipo = :equipo_id AND pt.estado_pago = 'Pendiente'
+        """), {"equipo_id": equipo_id})
+        jugadores = result.fetchall()
+
+        jugadores_data = []
+        total = 0
+        for j in jugadores:
+            monto = (j.tarjetas_amarillas * 2) + (j.tarjetas_rojas * 4)
+            total += monto
+            jugadores_data.append({
+                'id_pago': j.id_pago,
+                'jugador': j.jugador,
+                'tarjetas_amarillas': j.tarjetas_amarillas,
+                'tarjetas_rojas': j.tarjetas_rojas,
+                'monto': monto,
+                'enviado': j.id_pago in jugadores_enviados
+            })
+
+        return jsonify({
+            'nombre_equipo': jugadores_data and jugadores_data[0].get('nombre_equipo', '') or '',
+            'categoria': jugadores[0].categoria if jugadores else '',
+            'numero_partido': jugadores[0].numero_partido_jugado if jugadores else '',
+            'jugadores': jugadores_data,
+            'total': total,
+            'comprobante_enviado': bool(comprobante_result),
+            'comprobante_estado': est,
+            'motivo_rechazo': motivo
+        })
+    finally:
+        conn.close()
+@app.route('/subir_comprobante', methods=['POST'])
+def subir_comprobante():
+    if 'comprobante' not in request.files:
+        return jsonify({'success': False, 'message': 'No file uploaded'})
+
+    file = request.files['comprobante']
+    equipo_id = request.form.get('equipo_id')
+
+    if file.filename == '':
+        return jsonify({'success': False, 'message': 'No file selected'})
+
+    if file and allowed_file(file.filename):
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f"{timestamp}_{secure_filename(file.filename)}"
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+
+        tipo_pago = request.form.get('tipo_pago', 'completo')
+        categoria = request.form.get('categoria')
+        numero_partido = request.form.get('numero_partido')
+        monto = request.form.get('monto')
+        jugadores_sel = request.form.get('jugadores_seleccionados', '[]')
+
+        # Evita valores no válidos
+        if categoria == 'undefined':
+            categoria = None
+        if numero_partido == 'undefined':
+            numero_partido = None
+
+            try:
+                numero_partido = int(numero_partido) if numero_partido else None
+            except ValueError:
+                numero_partido = None
+
+        conn = get_db_connection()
+        try:
+            conn.execute(text("""
+                INSERT INTO comprobantes_pago (
+                    id_equipo, archivo, fecha_subida, estado,
+                    tipo_pago, categoria, numero_partido, monto, jugadores_seleccionados
+                ) VALUES (
+                    :equipo_id, :archivo, :fecha_subida, 'Pendiente',
+                    :tipo_pago, :categoria, :numero_partido, :monto, :jugadores_sel
+                )
+            """), {
+                "equipo_id": equipo_id,
+                "archivo": filename,
+                "fecha_subida": datetime.now(),
+                "tipo_pago": tipo_pago,
+                "categoria": categoria,
+                "numero_partido": numero_partido,
+                "monto": monto,
+                "jugadores_sel": jugadores_sel
+            })
+            conn.commit()
+            return jsonify({
+                'success': True,
+                'message': 'Comprobante recibido y en revisión. Estado cambiará tras verificación.'
+            })
+        finally:
+            conn.close()
+
+    return jsonify({'success': False, 'message': 'Invalid file type'})
+
+
+@app.route('/admin/comprobantes')
+def admin_comprobantes():
+    conn = get_db_connection()
+    try:
+        result = conn.execute(text("""
+            SELECT cp.*, ep.nombre_equipo
+            FROM comprobantes_pago cp
+            JOIN equipo_pagos ep ON cp.id_equipo = ep.id_equipo
+            ORDER BY cp.fecha_subida DESC
+        """))
+        comprobantes = result.fetchall()
+        return render_template('admin_comprobantes.html', comprobantes=comprobantes)
+    finally:
+        conn.close()
+
+
+import json
+# …
+@app.route('/verificar_comprobante', methods=['POST'])
+def verificar_comprobante():
+    data = request.get_json()
+    comprobante_id = data.get('comprobante_id')
+    estado = data.get('estado')
+    motivo = data.get('motivo', '')
+
+    conn = get_db_connection()
+    try:
+        # Actualizar estado y motivo
+        conn.execute(text("""
+            UPDATE comprobantes_pago
+               SET estado = :estado
+             WHERE id = :cid
+        """), {'estado': estado, 'cid': comprobante_id})
+        if estado == 'Rechazado':
+            conn.execute(text("""
+                UPDATE comprobantes_pago
+                   SET motivo_rechazo = :motivo
+                 WHERE id = :cid
+            """), {'motivo': motivo, 'cid': comprobante_id})
+
+        # Actualizar pago_tarjetas según estado
+        if estado == 'Aprobado':
+            # personalizado si hay ids, o completo si no
+            jugadores = data.get('jugadores_ids', [])
+            if jugadores:
+                for pid in jugadores:
+                    conn.execute(text("""
+                        UPDATE pago_tarjetas
+                           SET estado_pago = 'Pagado',
+                               metodo_pago = 'Transferencia',
+                               observaciones = 'Pagado por la web'
+                         WHERE id_pago = :pid
+                    """), {'pid': pid})
+            else:
+                conn.execute(text("""
+                    UPDATE pago_tarjetas
+                       SET estado_pago = 'Pagado',
+                           metodo_pago = 'Transferencia',
+                           observaciones = 'Pagado por la web'
+                     WHERE id_equipo = (
+                         SELECT id_equipo FROM comprobantes_pago WHERE id = :cid
+                     ) AND estado_pago = 'Pendiente'
+                """), {'cid': comprobante_id})
+        else:  # Rechazado
+            jugadores = data.get('jugadores_ids', [])
+            if jugadores:
+                for pid in jugadores:
+                    conn.execute(text("""
+                        UPDATE pago_tarjetas
+                           SET observaciones = 'Pago rechazado'
+                         WHERE id_pago = :pid
+                    """), {'pid': pid})
+            else:
+                conn.execute(text("""
+                    UPDATE pago_tarjetas
+                       SET observaciones = 'Pago rechazado'
+                     WHERE id_equipo = (
+                         SELECT id_equipo FROM comprobantes_pago WHERE id = :cid
+                     ) AND estado_pago = 'Pendiente'
+                """), {'cid': comprobante_id})
+
+        conn.commit()
+        return jsonify({'success': True, 'message': f'Comprobante {estado} y pagos actualizados'})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({'success': False, 'message': str(e)})
+    finally:
+        conn.close()
+
+# Add these near the top of your file, after the Flask imports
+import os
+from werkzeug.utils import secure_filename
+
+# Define allowed extensions and upload folder
+UPLOAD_FOLDER = 'static/img/comprobantes'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
+
+# Add this to your Flask configuration
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Create upload folder if it doesn't exist
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+
+# Add this function before your routes
+def allowed_file(filename):
+    return '.' in filename and \
+        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
