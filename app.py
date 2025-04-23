@@ -27,7 +27,14 @@ import pytz
 timezone = pytz.timezone('UTC')
 today_utc = datetime.now(timezone).strftime('%Y-%m-%d')  # Fecha actual en UTC
 
+# ... existing imports ...
 
+@app.route('/landing')
+def landing():
+    return render_template('landing.html')
+
+
+# ... rest of your routes ...
 # Ruta para procesar envíos por lotes
 @app.route('/admin/batch', methods=['POST'])
 def process_batch():
@@ -110,7 +117,7 @@ def process_batch():
 # Ruta principal
 @app.route('/')
 def index():
-    return redirect(url_for('admin'))
+    return redirect(url_for('landing'))
 
 
 # Panel de administrador

@@ -5,120 +5,194 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RS COBRANZAS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
-        /* Estilos generales */
+        /* Variables CSS */
+        :root {
+            --primary-color: #ffcc00;
+            --secondary-color: #000;
+            --bg-dark: #1a1a1a;
+            --text-light: #fff;
+            --font-family: 'Roboto', sans-serif; /* Fuente moderna y legible */
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background-color: #1a1a1a; /* Negro */
-            color: #fff;
+            font-family: var(--font-family);
+            background-color: var(--bg-dark);
+            color: var(--text-light);
             margin: 0;
             padding: 0;
-            line-height: 1.6;
+            line-height: 1.6; /* Mejora la legibilidad */
+            transition: color 0.3s, background-color 0.3s; /* Transición suave */
         }
 
         header {
-            background-color: #ffd700; /* Amarillo */
-            color: #000; /* Negro */
-            padding: 15px 20px;
-            text-align: center;
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            padding: 12px 20px; /* Aumenta el padding */
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15); /* Sombra más sutil */
+            transition: background-color 0.3s; /* Transición suave */
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+        }
+
+        .logo img {
+            width: 50px; /* Aumenta el tamaño del logo */
+            height: auto;
+            margin-right: 12px; /* Aumenta el margen */
+            transition: transform 0.3s ease-in-out; /* Transición suave */
+        }
+
+        .logo img:hover {
+            transform: rotate(15deg); /* Rota el logo al pasar el mouse */
         }
 
         header h1 {
             margin: 0;
-            font-size: 2rem;
+            font-size: 1.75rem; /* Aumenta el tamaño del título */
+            font-weight: 700; /* Título más resaltado */
         }
 
         nav {
-            margin-top: 10px;
+            display: flex;
+            gap: 20px; /* Aumenta el espacio entre los enlaces */
         }
 
         nav a {
-            color: #000; /* Negro */
+            color: var(--secondary-color);
             text-decoration: none;
-            margin: 0 10px;
-            font-size: 1rem;
-            font-weight: bold;
+            font-size: 1rem; /* Aumenta el tamaño de la fuente */
+            font-weight: 600;
+            padding: 8px 16px; /* Aumenta el padding */
+            border-radius: 6px; /* Bordes más redondeados */
+            transition: background-color 0.3s, color 0.3s; /* Transición suave */
         }
 
         nav a:hover {
-            text-decoration: underline;
+            background-color: rgba(0, 0, 0, 0.1); /* Fondo sutil al pasar el mouse */
         }
 
         main {
-            padding: 20px;
+            padding: 20px; /* Aumenta el padding */
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
-        /* Logo */
-        .logo {
+        /* Botón de Inicio */
+        .home-button {
+            position: absolute;
+
+            top: 20px;
+            left: 20px;
+            background: var(--primary-color);
+            color: var(--secondary-color);
+            padding: 12px 24px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            z-index: 1000;
             display: flex;
-            justify-content: center;
             align-items: center;
-            margin-bottom: 10px;
+            gap: 8px;
         }
 
-        .logo img {
-            width: 80px;
-            height: auto;
+        .home-button:hover {
+            background: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
         }
 
-        /* Diseño responsivo */
+        .home-button i {
+            font-size: 1.2em;
+        }
+
+        /* Media Queries */
         @media (max-width: 768px) {
-            header h1 {
-                font-size: 1.5rem;
+            .header-content {
+                flex-direction: column;
+                text-align: center;
             }
 
-            nav a {
-                font-size: 0.9rem;
+            .logo {
+                margin-bottom: 12px; /* Aumenta el margen */
             }
 
-            .logo img {
-                width: 60px;
+            nav {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 12px; /* Reduce el espacio entre los enlaces */
             }
         }
 
         @media (max-width: 480px) {
             header h1 {
-                font-size: 1.2rem;
+                font-size: 1.5rem; /* Reduce el tamaño del título */
             }
 
             nav {
-                display: flex;
                 flex-direction: column;
                 align-items: center;
+                gap: 10px; /* Reduce el espacio entre los enlaces */
             }
 
             nav a {
-                margin: 5px 0;
-                font-size: 0.8rem;
+                width: 100%;
+                text-align: center;
+                padding: 10px; /* Aumenta el padding */
+                background-color: rgba(0, 0, 0, 0.05);
             }
 
-            .logo img {
-                width: 50px;
+            .home-button {
+                top: 10px;
+                left: 10px;
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+
+            .home-button i {
+                font-size: 1em;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Encabezado -->
+    <!-- Botón de Inicio -->
+    <a href="/" class="home-button">
+        <i class="fas fa-home"></i>
+        Ir a Inicio
+    </a>
+
     <header>
-        <div class="logo">
-            <img src="https://png.pngtree.com/png-clipart/20240312/original/pngtree-illustration-of-golden-soccer-symbol-it-s-winner-concept-png-image_14575046.png" alt="Logo Balón de Oro">
+        <div class="header-content">
+            <div class="logo">
+                <img src="https://png.pngtree.com/png-clipart/20240312/original/pngtree-illustration-of-golden-soccer-symbol-it-s-winner-concept-png-image_14575046.png" alt="Logo Balón de Oro">
+                <h1>Sistema de Pagos RS COBRANZAS</h1>
+            </div>
+            <nav>
+                <a href="{{ url_for('admin') }}">Admin</a>
+                <a href="{{ url_for('pagos') }}">Pagos de Esta Semana</a>
+                <a href="{{ url_for('filtrar_pagos') }}">Filtrar Pagos</a>
+                <a href="{{ url_for('reporte_semanal') }}">Reporte Semanal</a>
+            </nav>
         </div>
-        <h1>Sistema de Pagos RS COBRANZAS</h1>
-        <nav>
-            <a href="{{ url_for('admin') }}">Admin</a>
-            <a href="{{ url_for('pagos') }}">Pagos de Esta Semana</a>
-            <a href="{{ url_for('filtrar_pagos') }}">Filtrar Pagos</a>
-            <!-- Nuevo botón para el reporte semanal -->
-            <a href="{{ url_for('reporte_semanal') }}">Reporte Semanal</a>
-        </nav>
     </header>
 
-    <!-- Contenido principal -->
     <main>
         {% block content %}{% endblock %}
     </main>
-    ...
     {% block scripts %}{% endblock %}
 </body>
 </html>

@@ -2,56 +2,82 @@
 
 {% block content %}
 <style>
+    /* Variables CSS */
+    :root {
+        --bg-dark: #121212;
+        --bg-medium: #333;
+        --bg-light: #555;
+        --text-light: #ffffff;
+        --text-medium: #ddd;
+        --accent-color: #f0d8c0;
+        --table-header-bg: #555;
+        --table-row-even-bg: #444;
+    }
+
     body {
         font-family: Arial, sans-serif;
-        background-color: #121212;
+        background-color: var(--bg-dark);
         margin: 0;
         padding: 0;
-        color: #ffffff;
+        color: var(--text-light);
+        line-height: 1.6;
     }
 
     h1, h2 {
         text-align: center;
-        color: #ffffff;
+        color: var(--text-light);
+        margin-bottom: 20px;
     }
 
     h3 {
-        color: #f0d8c0;
+        color: var(--accent-color);
         text-align: center;
+        margin-bottom: 15px;
+    }
+
+    h4 {
+        color: var(--text-light);
+        margin-bottom: 10px;
     }
 
     .container {
         width: 95%;
         max-width: 1200px;
         margin: auto;
-        overflow: hidden;
         padding: 20px;
     }
 
     table {
         width: 100%;
         border-collapse: collapse;
-        background: #333;
-        color: #ddd;
+        background: var(--bg-medium);
+        color: var(--text-medium);
         border-radius: 10px;
         overflow: hidden;
         margin-bottom: 20px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
     }
 
     th, td {
-        padding: 12px;
-        border: 1px solid #555;
+        padding: 12px 15px;
         text-align: left;
+        border-bottom: 1px solid #555; /* Líneas divisorias más sutiles */
     }
 
     th {
-        background: #555;
-        color: #eee;
+        background: var(--table-header-bg);
+        color: var(--text-light);
         text-align: center;
+        font-weight: bold;
     }
 
     tbody tr:nth-child(even) {
-        background-color: #444;
+        background-color: var(--table-row-even-bg);
+    }
+
+    /* Eliminar bordes innecesarios */
+    table, th, td {
+        border: none;
     }
 
     /* Estilos para dispositivos móviles */
@@ -80,7 +106,7 @@
     <!-- Pagos de Tarjetas -->
     {% if pagos.tarjetas %}
     <h4>Pagos de Tarjetas</h4>
-    <table border="1">
+    <table>
         <thead>
             <tr>
                 <th>Equipo</th>
@@ -115,7 +141,7 @@
     <!-- Pagos de Inscripciones -->
     {% if pagos.inscripciones %}
     <h4>Pagos de Inscripciones</h4>
-    <table border="1" id="tabla-inscripciones">
+    <table>
         <thead>
             <tr>
                 <th>Jugador/Equipo</th>

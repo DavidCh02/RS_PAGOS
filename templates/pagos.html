@@ -1,273 +1,352 @@
-
 {% extends "base.html" %}
 {% block content %}
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pagos Pendientes</title>
-    <style>
-        /* Estilos generales */
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #1a1a1a; /* Negro */
-            color: #fff;
-            margin: 0;
-            padding: 0;
-            line-height: 1.6;
-        }
-        h2 {
-            text-align: center;
-            color: #ffd700; /* Amarillo */
-            font-size: 2rem;
-            margin-top: 20px;
-        }
-        p {
-            text-align: center;
-            font-size: 1.2rem;
-            color: #ffd700; /* Amarillo */
-        }
-        h3 {
-            color: #ffd700; /* Amarillo */
-            margin-top: 20px;
-        }
-        small {
-            color: #ccc; /* Gris claro */
-        }
-        .logo {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-top: 20px;
-        }
-        .logo img {
-            width: 100px;
-            height: auto;
-        }
-        .imagen-container {
-            text-align: center;
-            margin-top: 20px;
-        }
-        .imagen-container img {
-            max-width: 100%;
-            height: auto;
-            border: 2px solid #ffd700; /* Amarillo */
-            border-radius: 10px;
-        }
-        a {
-            display: block;
-            text-align: center;
-            margin-top: 20px;
-            color: #ffd700; /* Amarillo */
-            text-decoration: none;
-            font-size: 1.2rem;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-        /* Estilo para tarjetas e inscripciones */
-        .payment-card, .payment-inscription {
-            background-color: #2a2a2a; /* Negro más claro */
-            margin: 10px auto;
-            padding: 15px;
-            border: 1px solid #ffd700; /* Amarillo */
-            border-radius: 8px;
-            max-width: 95%;
-        }
-        .payment-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-        }
-        .payment-header h4 {
-            margin: 0;
-            font-size: 1.2rem;
-            color: #ffd700; /* Amarillo */
-        }
-        .team-name {
-            font-weight: bold;
-            color: #ffd700;
-            display: inline-block;
-            min-width: 150px;
-        }
-        .payment-info {
-            color: #fff;
-        }
-        .payment-header button {
-            background: none;
-            border: none;
-            color: #ffd700; /* Amarillo */
-            font-size: 1.2rem;
-            cursor: pointer;
-        }
-        .payment-details {
-            display: none;
-            margin-top: 10px;
-        }
-        .payment-details p {
-            margin: 5px 0;
-            color: #fff;
-        }
-        /* Diseño responsivo */
-        @media (max-width: 768px) {
-            h2 {
-                font-size: 1.5rem;
-            }
-            p {
-                font-size: 1rem;
-            }
-            .payment-card, .payment-inscription {
-                padding: 10px;
-            }
-            .payment-header h4 {
-                font-size: 1rem;
-            }
-            .payment-header button {
-                font-size: 1rem;
-            }
-        }
-        @media (max-width: 480px) {
-            h2 {
-                font-size: 1.2rem;
-            }
-            p {
-                font-size: 0.9rem;
-            }
-            .payment-card, .payment-inscription {
-                padding: 8px;
-            }
-            .payment-header h4 {
-                font-size: 0.9rem;
-            }
-            .payment-header button {
-                font-size: 0.9rem;
-            }
-        }
-    </style>
-</head>
-<body>
-    <!-- Logo de la empresa -->
-    <div class="logo">
-        <img src="https://png.pngtree.com/png-clipart/20240312/original/pngtree-illustration-of-golden-soccer-symbol-it-s-winner-concept-png-image_14575046.png" alt="Logo Balón de Oro">
-    </div>
+<style>
+    /* Estilos Generales */
+    body {
+        font-family: 'Arial', sans-serif;
+        background-color: #1e1e1e;
+        color: #fff;
+        margin: 0;
+        padding: 0;
+    }
 
-    <!-- Contenido principal -->
+    .container {
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 20px;
+    }
+
+    h2 {
+        text-align: center;
+        color: #ffc107; /* Amarillo más moderno */
+        font-size: 2.5rem;
+        margin-bottom: 20px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* Sombra para resaltar el texto */
+    }
+
+    /* Estilos para la Fecha Actual */
+    .fecha-actual {
+        text-align: center;
+        font-size: 1.2rem;
+        color: #ddd;
+        margin-bottom: 30px;
+    }
+
+    /* Estilos para las Secciones de Pago (Tarjeta e Inscripción) */
+    .payment-section {
+        margin-bottom: 30px; /* Aumentar el espacio entre secciones */
+    }
+
+    h3 {
+        color: #fff;
+        font-size: 1.8rem;
+        margin-bottom: 15px;
+        border-bottom: 2px solid #ffc107; /* Línea amarilla debajo del título */
+        padding-bottom: 5px;
+    }
+
+    h4 {
+        color: #eee;
+        font-size: 1.4rem;
+        margin-bottom: 10px;
+    }
+
+    /* Estilos para las Tarjetas de Pago */
+    .payment-card, .payment-inscription {
+        background-color: #333;
+        border: 1px solid #555; /* Borde más sutil */
+        border-radius: 10px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Sombra para dar profundidad */
+        transition: transform 0.2s ease-in-out; /* Transición suave al hacer hover */
+    }
+
+    .payment-card:hover, .payment-inscription:hover {
+        transform: translateY(-5px); /* Elevar la tarjeta al hacer hover */
+    }
+
+    .payment-header {
+        padding: 20px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .team-name {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #ffc107;
+        margin-right: 15px;
+    }
+
+    .payment-info {
+        font-size: 1.1rem;
+        color: #ccc;
+    }
+
+    .payment-header button {
+        background: none;
+        border: none;
+        color: #ffc107;
+        font-size: 1.5rem;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+    .payment-header button:hover {
+        color: #fff;
+    }
+
+    /* Estilos para los Detalles de Pago */
+    .payment-details {
+        padding: 20px;
+        background-color: #444;
+        border-top: 1px solid #555;
+        border-radius: 0 0 10px 10px;
+        display: none; /* Oculto por defecto */
+    }
+
+    .payment-details p {
+        color: #ddd;
+        margin-bottom: 10px;
+        line-height: 1.4; /* Mejor legibilidad */
+    }
+
+    /* Estilos para el Formulario de Actualización */
+    .payment-details form {
+        margin-top: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .payment-details label {
+        color: #eee;
+        font-size: 1rem;
+    }
+
+    .payment-details select {
+        padding: 10px 15px;
+        border-radius: 5px;
+        border: none;
+        background-color: #555;
+        color: #fff;
+        font-size: 1rem;
+        cursor: pointer;
+        appearance: none; /* Oculta la flecha por defecto en algunos navegadores */
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23fff'%3E%3Cpath d='M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z'/%3E%3C/svg%3E"); /* Flecha personalizada */
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        background-size: 1.5em;
+    }
+
+    .payment-details select:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px #ffc107;
+    }
+
+    .payment-details button {
+        padding: 12px 20px;
+        border-radius: 5px;
+        border: none;
+        background-color: #ffc107;
+        color: #222;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .payment-details button:hover {
+        background-color: #fff;
+        color: #222;
+    }
+
+    /* Estilos para el Enlace a Pagos Realizados */
+    a {
+        display: block;
+        text-align: center;
+        color: #ffc107;
+        font-size: 1.2rem;
+        margin-top: 30px;
+        text-decoration: none;
+        transition: color 0.2s;
+    }
+
+    a:hover {
+        color: #fff;
+        text-decoration: underline;
+    }
+
+    /* Media Queries para Responsividad */
+    @media (max-width: 768px) {
+        .container {
+            padding: 15px;
+        }
+
+        h2 {
+            font-size: 2rem;
+        }
+
+        .payment-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .team-name {
+            margin-bottom: 5px;
+        }
+
+        .payment-info {
+            font-size: 1rem;
+        }
+
+        .payment-details form {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .payment-details select, .payment-details button {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        h2 {
+            font-size: 1.8rem;
+        }
+
+        .team-name {
+            font-size: 1.1rem;
+        }
+
+        .payment-info {
+            font-size: 0.9rem;
+        }
+    }
+</style>
+
+<div class="container">
     <h2>Pagos Pendientes</h2>
-    <p><strong>Fecha Actual:</strong> {{ fecha_actual }}</p>
+    <p class="fecha-actual"><strong>Fecha Actual:</strong> {{ fecha_actual }}</p>
+
     <!-- Mostrar pagos agrupados por día de la semana -->
     {% for dia, pagos in pagos_por_dia.items() %}
-    <h3>
-        {{ dia }}
-        {% if dia == "Sábado" %}
+    <div class="payment-section">
+        <h3>
+            {{ dia }}
+            {% if dia == "Sábado" %}
             <small>({{ fecha_sabado }})</small>
-        {% elif dia == "Domingo" %}
+            {% elif dia == "Domingo" %}
             <small>({{ fecha_domingo }})</small>
+            {% endif %}
+        </h3>
+
+        <!-- Pagos de Tarjetas -->
+        {% if pagos.tarjetas %}
+        <h4>Pagos de Tarjetas</h4>
+        {% for pago in pagos.tarjetas %}
+        <div class="payment-card">
+            <div class="payment-header" data-id="tarjeta-{{ dia }}-{{ loop.index }}">
+                <h4 class="payment-header-text">
+                    <span class="team-name">{{ pago.nombre_equipo or "-" }}</span>
+                    <span class="payment-info">
+                        Categoría: {{ pago.categoria }} | Jugador: {{ pago.jugador }} | Monto a Pagar: ${{ pago.valor_total_pagar }}
+                    </span>
+                </h4>
+                <button class="toggle-details-btn" id="btn-tarjeta-{{ dia }}-{{ loop.index }}">+</button>
+            </div>
+            <div class="payment-details" id="tarjeta-{{ dia }}-{{ loop.index }}">
+                <p><strong>Categoría:</strong> {{ pago.categoria }}</p>
+                <p><strong>Tarjetas Rojas:</strong> {{ pago.tarjetas_rojas }}</p>
+                <p><strong>Tarjetas Amarillas:</strong> {{ pago.tarjetas_amarillas }}</p>
+                <p><strong>Observaciones:</strong> {{ pago.observaciones }}</p>
+                <p><strong>Método de Pago:</strong> {{ pago.metodo_pago }}</p>
+                <form method="POST">
+                    <input type="hidden" name="id_pago" value="{{ pago.id_pago }}">
+                    <input type="hidden" name="tipo_pago" value="tarjeta">
+                    <label for="metodo_pago_tarjeta_{{ loop.index }}">Método:</label>
+                    <select id="metodo_pago_tarjeta_{{ loop.index }}" name="metodo_pago">
+                        <option value="Efectivo" {% if pago.metodo_pago == "Efectivo" %}selected{% endif %}>Efectivo</option>
+                        <option value="Transferencia" {% if pago.metodo_pago == "Transferencia" %}selected{% endif %}>Transferencia</option>
+                    </select>
+                    <label for="estado_pago_tarjeta_{{ loop.index }}">Estado:</label>
+                    <select id="estado_pago_tarjeta_{{ loop.index }}" name="estado_pago">
+                        <option value="Pendiente" {% if pago.estado_pago == "Pendiente" %}selected{% endif %}>Pendiente</option>
+                        <option value="Pagado" {% if pago.estado_pago == "Pagado" %}selected{% endif %}>Pagado</option>
+                    </select>
+                    <button type="submit" name="actualizar_pago">Actualizar</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
         {% endif %}
 
-    </h3>
-    <!-- Pagos de Tarjetas -->
-    {% if pagos.tarjetas %}
-    <h4>Pagos de Tarjetas</h4>
-    {% for pago in pagos.tarjetas %}
-    <div class="payment-card">
-        <div class="payment-header" data-id="tarjeta-{{ dia }}-{{ loop.index }}">
-            <h4><span class="team-name">{{ pago.nombre_equipo or "-" }}</span> | <span class="payment-info">Categoría: {{ pago.categoria }} | Jugador: {{ pago.jugador }} | Monto a Pagar: ${{ pago.valor_total_pagar }}</span></h4>
-            <button id="btn-tarjeta-{{ dia }}-{{ loop.index }}">+</button>
+        <!-- Pagos de Inscripciones -->
+        {% if pagos.inscripciones %}
+        <h4>Pagos de Inscripciones</h4>
+        {% for pago in pagos.inscripciones %}
+        <div class="payment-inscription">
+            <div class="payment-header" data-id="inscripcion-{{ dia }}-{{ loop.index }}">
+                <h4 class="payment-header-text">
+                    <span class="team-name">{{ pago.nombre_equipo or "-" }}</span>
+                    <span class="payment-info">
+                        Categoría: {{ pago.categoria }} | Jugador: {{ pago.jugador or "Sin jugador" }} | Monto a Pagar: ${{ pago.monto_a_cobrar }}
+                    </span>
+                </h4>
+                <button class="toggle-details-btn" id="btn-inscripcion-{{ dia }}-{{ loop.index }}">+</button>
+            </div>
+            <div class="payment-details" id="inscripcion-{{ dia }}-{{ loop.index }}">
+                <p><strong>Categoría:</strong> {{ pago.categoria }}</p>
+                <p><strong>Jugador:</strong> {{ pago.jugador or "Sin jugador" }}</p>
+                <p><strong>Observaciones:</strong> {{ pago.observaciones }}</p>
+                <p><strong>Método de Pago:</strong> {{ pago.metodo_pago }}</p>
+                <form method="POST">
+                    <input type="hidden" name="id_pago" value="{{ pago.id_inscripcion }}">
+                    <input type="hidden" name="tipo_pago" value="inscripcion">
+                    <label for="metodo_pago_inscripcion_{{ loop.index }}">Método:</label>
+                    <select id="metodo_pago_inscripcion_{{ loop.index }}" name="metodo_pago">
+                        <option value="Efectivo" {% if pago.metodo_pago == "Efectivo" %}selected{% endif %}>Efectivo</option>
+                        <option value="Transferencia" {% if pago.metodo_pago == "Transferencia" %}selected{% endif %}>Transferencia</option>
+                    </select>
+                    <label for="estado_pago_inscripcion_{{ loop.index }}">Estado:</label>
+                    <select id="estado_pago_inscripcion_{{ loop.index }}" name="estado_pago">
+                        <option value="Pendiente" {% if pago.estado_pago == "Pendiente" %}selected{% endif %}>Pendiente</option>
+                        <option value="Pagado" {% if pago.estado_pago == "Pagado" %}selected{% endif %}>Pagado</option>
+                    </select>
+                    <button type="submit" name="actualizar_pago">Actualizar</button>
+                </form>
+            </div>
         </div>
-        <div class="payment-details" id="tarjeta-{{ dia }}-{{ loop.index }}">
-            <p><strong>Categoría:</strong> {{ pago.categoria }}</p>
-            <p><strong>Tarjetas Rojas:</strong> {{ pago.tarjetas_rojas }}</p>
-            <p><strong>Tarjetas Amarillas:</strong> {{ pago.tarjetas_amarillas }}</p>
-            <p><strong>Observaciones:</strong> {{ pago.observaciones }}</p>
-            <p><strong>Método de Pago:</strong> {{ pago.metodo_pago }}</p>
-            <form method="POST" style="display:inline;">
-                <input type="hidden" name="id_pago" value="{{ pago.id_pago }}">
-                <input type="hidden" name="tipo_pago" value="tarjeta">
-                <label>Método:</label>
-                <select name="metodo_pago">
-                    <option value="Efectivo">Efectivo</option>
-                    <option value="Transferencia">Transferencia</option>
-                </select>
-                <label>Estado:</label>
-                <select name="estado_pago">
-                    <option value="Pendiente">Pendiente</option>
-                    <option value="Pagado">Pagado</option>
-                </select>
-                <button type="submit" name="actualizar_pago">Actualizar</button>
-            </form>
-        </div>
+        {% endfor %}
+        {% endif %}
     </div>
     {% endfor %}
-    {% endif %}
-    <!-- Pagos de Inscripciones -->
-{% if pagos.inscripciones %}
-<h4>Pagos de Inscripciones</h4>
-{% for pago in pagos.inscripciones %}
-<div class="payment-inscription">
-    <div class="payment-header" data-id="inscripcion-{{ dia }}-{{ loop.index }}">
-        <!-- Modificación aquí: se agrega la categoría -->
-        <h4><span class="team-name">{{ pago.nombre_equipo or "-" }}</span> | <span class="payment-info">Categoría: {{ pago.categoria }} | Jugador: {{ pago.jugador or "Sin jugador" }} | Monto a Pagar: ${{ pago.monto_a_cobrar }}</span></h4>
-        <button id="btn-inscripcion-{{ dia }}-{{ loop.index }}">+</button>
-    </div>
-    <div class="payment-details" id="inscripcion-{{ dia }}-{{ loop.index }}">
-        <p><strong>Categoría:</strong> {{ pago.categoria }}</p>
-        <p><strong>Jugador:</strong> {{ pago.jugador or "Sin jugador" }}</p>
-        <p><strong>Observaciones:</strong> {{ pago.observaciones }}</p>
-        <p><strong>Método de Pago:</strong> {{ pago.metodo_pago }}</p>
-        <form method="POST" style="display:inline;">
-            <input type="hidden" name="id_pago" value="{{ pago.id_inscripcion }}">
-            <input type="hidden" name="tipo_pago" value="inscripcion">
-            <label>Método:</label>
-            <select name="metodo_pago">
-                <option value="Efectivo">Efectivo</option>
-                <option value="Transferencia">Transferencia</option>
-            </select>
-            <label>Estado:</label>
-            <select name="estado_pago">
-                <option value="Pendiente">Pendiente</option>
-                <option value="Pagado">Pagado</option>
-            </select>
-            <button type="submit" name="actualizar_pago">Actualizar</button>
-        </form>
-    </div>
-</div>
-{% endfor %}
-{% endif %}
-    {% endfor %}
+
     <!-- Enlace a pagos realizados esta semana -->
     <a href="{{ url_for('pagados_hoy') }}">Ver Pagos Realizados Esta Semana</a>
-    <!-- Espacio para imágenes -->
+</div>
 
-    <script>
-        // Función para mostrar/ocultar detalles
-        function toggleDetails(id) {
-            const details = document.getElementById(id);
-            const button = document.querySelector(`[data-id="${id}"] button`);
-            if (!details || !button) {
-                console.error("Elemento no encontrado:", id);
-                return;
-            }
-            if (details.style.display === "none" || details.style.display === "") {
-                details.style.display = "block";
-                button.textContent = "-";
-            } else {
-                details.style.display = "none";
-                button.textContent = "+";
-            }
-        }
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const paymentHeaders = document.querySelectorAll('.payment-header');
 
-        // Asignar eventos después de que el DOM esté completamente cargado
-        document.addEventListener("DOMContentLoaded", function () {
-            document.querySelectorAll(".payment-header").forEach(header => {
-                header.addEventListener("click", function () {
-                    const id = this.getAttribute("data-id");
-                    toggleDetails(id);
-                });
+        paymentHeaders.forEach(header => {
+            header.addEventListener('click', function() {
+                const paymentDetails = this.nextElementSibling;
+                const toggleButton = this.querySelector('.toggle-details-btn');
+
+                if (paymentDetails.style.display === 'none' || paymentDetails.style.display === '') {
+                    paymentDetails.style.display = 'block';
+                    toggleButton.textContent = '-';
+                } else {
+                    paymentDetails.style.display = 'none';
+                    toggleButton.textContent = '+';
+                }
             });
         });
-    </script>
-</body>
-</html>
+    });
+</script>
 {% endblock %}

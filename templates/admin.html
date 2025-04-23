@@ -1,18 +1,22 @@
+
 {% extends "base.html" %}
 
 {% block content %}
 <style>
+    /* General Styles */
     body {
         font-family: Arial, sans-serif;
         background-color: #000;
         margin: 0;
         padding: 0;
         color: #ffcc00;
+        overflow-x: hidden; /* Prevent horizontal scrolling */
     }
 
     h2 {
         color: #ffcc00;
         text-align: center;
+        margin-bottom: 20px;
     }
 
     label {
@@ -21,6 +25,7 @@
         color: #ffcc00;
     }
 
+    /* Input Fields */
     input[type="text"],
     input[type="password"],
     input[type="date"],
@@ -28,114 +33,153 @@
     select,
     textarea {
         width: 100%;
-        padding: 8px;
-        margin-bottom: 10px;
-        border-radius: 5px;
+        padding: 10px;
+        margin-bottom: 15px;
+        border-radius: 8px;
         border: 1px solid #555;
         background-color: #333;
         color: #fff;
         box-sizing: border-box;
+        transition: border-color 0.3s ease;
     }
 
+    input[type="text"]:focus,
+    input[type="password"]:focus,
+    input[type="date"]:focus,
+    input[type="number"]:focus,
+    select:focus,
+    textarea:focus {
+        border-color: #ffcc00;
+        outline: none; /* Remove default focus outline */
+        box-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
+    }
+
+    /* Buttons */
     button {
         background-color: #ffcc00;
         color: #000;
         border: none;
-        padding: 10px 20px;
-        border-radius: 5px;
+        padding: 12px 25px;
+        border-radius: 8px;
         cursor: pointer;
         font-weight: bold;
-        transition: background-color 0.3s;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+        margin-top: 10px;
+        margin-bottom: 10px;
     }
 
     button:hover {
         background-color: #e6b800;
+        transform: translateY(-2px);
     }
 
+    /* Login Popup */
     #login-popup {
         display: none;
         position: fixed;
         top: 50%;
         left: 50%;
-        transform: translate(-50%, -50%);
-        background: #222;
-        padding: 20px;
-        border: 1px solid #ffcc00;
+        transform: translate(-50%, -50%) !important;
+        background: rgba(34, 34, 34, 0.95);
+        padding: 30px;
+        border: 2px solid #ffcc00;
         z-index: 1000;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+        border-radius: 15px;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.7);
+        width: 300px;
+        max-width: 90%;
+        text-align: center;
+        margin: 0 auto;
     }
 
-    #login-popup h2 {
-        color: #ffcc00;
-        margin-bottom: 15px;
+    #login-popup form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
     }
 
-    #login-popup label {
-        color: #ffcc00;
+    #login-popup input {
+        margin-bottom: 0;
     }
 
-    #main-content {
+    #error-message {
         display: none;
-        padding: 20px;
+        color: #ff4444;
+        margin-top: 10px;
+        font-size: 14px;
     }
 
-    form {
-        background: #222;
-        padding: 20px;
-        border-radius: 10px;
-        margin-bottom: 20px;
-        border: 1px solid #ffcc00;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    .login-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(4px);
+        z-index: 999;
+    }
+
+    @media (max-width: 768px) {
+        #login-popup {
+            width: 280px;
+            padding: 25px;
+            transform: translate(-50%, -50%) !important;
+        }
     }
 </style>
 
-<!-- Ventana Emergente para Inicio de Sesión -->
+<!-- Add overlay div before login popup -->
+<div class="login-overlay" id="login-overlay"></div>
+
+<!-- Update login popup HTML -->
 <div id="login-popup">
-    <h2>Iniciar Sesión como Administrador</h2>
+    <h2>Iniciar Sesión</h2>
     <form id="login-form">
-        <label>Usuario:</label>
-        <input type="text" id="usuario" required><br>
-        <label>Contraseña:</label>
-        <input type="password" id="contrasena" required><br>
+        <label for="usuario">Usuario:</label>
+        <input type="text" id="usuario" name="usuario" required><br>
+        <label for="contrasena">Contraseña:</label>
+        <input type="password" id="contrasena" name="contrasena" required><br>
         <button type="button" onclick="validarCredenciales()">Ingresar</button>
     </form>
-    <p id="error-message" style="color: red; display: none;">Usuario o contraseña incorrectos.</p>
+    <p id="error-message">Usuario o contraseña incorrectos.</p>
 </div>
 
 <!-- Contenido Principal -->
 <div id="main-content">
-    <!-- Add navigation buttons at the top -->
-    <div class="nav-buttons" style="margin-bottom: 20px; text-align: center;">
-        <button onclick="window.location.href='/tarjetas_equipos'" style="margin: 0 10px;">
-            Ver Tarjetas por Equipo
-        </button>
-        <button onclick="window.location.href='/admin/comprobantes'" style="margin: 0 10px;">
-            Gestionar Comprobantes
-        </button>
+    <!-- Navigation Buttons -->
+    <div class="nav-buttons">
+        <button onclick="window.location.href='/tarjetas_equipos'">Ver Tarjetas por Equipo</button>
+        <button onclick="window.location.href='/admin/comprobantes'">Gestionar Comprobantes</button>
     </div>
 
+    <!-- Success Message Container -->
+    <div class="success-message" id="success-message"></div>
+
+    <!-- Formulario Tarjetas -->
     <h2>Agregar Pago de Tarjetas</h2>
     <form id="form-tarjetas">
         <div class="batch-controls">
-            <label>Nombre del Equipo:</label>
+            <label for="equipo_id_tarjeta">Nombre del Equipo:</label>
             <select name="equipo_id" id="equipo_id_tarjeta" class="batch-field">
                 <option value="">Seleccionar equipo...</option>
                 {% for id, nombre in equipos_existentes.items() %}
                 <option value="{{ id }}">{{ nombre }}</option>
                 {% endfor %}
+                <option value="new_team">Ingresar nuevo equipo</option>
             </select>
-            <input type="text" name="nuevo_equipo" id="nuevo_equipo_tarjeta" placeholder="O ingresar nuevo equipo" style="display: none;">
-            
-            <label>Categoría:</label>
-            <select name="categoria" class="batch-field" required>
+            <input type="text" name="nuevo_equipo" id="nuevo_equipo_tarjeta" placeholder="Nombre del nuevo equipo">
+
+            <label for="categoria_tarjeta">Categoría:</label>
+            <select name="categoria" id="categoria_tarjeta" class="batch-field" required>
                 <option value="Abierta">Abierta</option>
                 <option value="+40">+40</option>
                 <option value="Femenina">Femenina</option>
             </select>
 
-            <label>Número de Partido:</label>
-            <select name="numero_partido_jugado" class="batch-field" required>
+            <label for="numero_partido_tarjeta">Número de Partido:</label>
+            <select name="numero_partido_jugado" id="numero_partido_tarjeta" class="batch-field" required>
                 <option value="">Seleccione el número de partido</option>
                 <option value="1">1</option>
                 <option value="2">2</option>
@@ -152,8 +196,8 @@
                 <option value="Final">Final</option>
             </select>
 
-            <label>Fecha de Cobro:</label>
-            <input type="date" name="fecha_cobro" class="batch-field" required>
+            <label for="fecha_cobro_tarjeta">Fecha de Cobro:</label>
+            <input type="date" name="fecha_cobro" id="fecha_cobro_tarjeta" class="batch-field" required>
         </div>
 
         <div class="players-container" id="players-container-tarjetas">
@@ -165,33 +209,36 @@
         <button type="button" onclick="enviarFormularioMultiple('form-tarjetas')">Guardar Todos</button>
     </form>
 
+    <!-- Formulario Inscripcion -->
     <h2>Agregar Pago de Inscripción</h2>
     <form id="form-inscripcion">
         <div class="batch-controls">
-            <label>Nombre del Equipo:</label>
+            <label for="equipo_id_inscripcion">Nombre del Equipo:</label>
             <select name="equipo_id" id="equipo_id_inscripcion" class="batch-field">
                 <option value="">Seleccionar equipo...</option>
                 {% for id, nombre in equipos_existentes.items() %}
                 <option value="{{ id }}">{{ nombre }}</option>
                 {% endfor %}
+                <option value="new_team">Ingresar nuevo equipo</option>
             </select>
-            <input type="text" name="nuevo_equipo" id="nuevo_equipo_inscripcion" placeholder="O ingresar nuevo equipo" style="display: none;">
+            <input type="text" name="nuevo_equipo" id="nuevo_equipo_inscripcion" placeholder="Nombre del nuevo equipo">
 
-            <label>Categoría:</label>
-            <select name="categoria" class="batch-field" required>
+            <label for="categoria_inscripcion">Categoría:</label>
+            <select name="categoria" id="categoria_inscripcion" class="batch-field" required>
                 <option value="Abierta">Abierta</option>
                 <option value="+40">+40</option>
                 <option value="Femenina">Femenina</option>
             </select>
 
-            <label>Fecha de Inscripción:</label>
-            <input type="date" name="fecha_inscripcion" class="batch-field" required>
+            <label for="fecha_inscripcion">Fecha de Inscripción:</label>
+            <input type="date" name="fecha_inscripcion" id="fecha_inscripcion" class="batch-field" required>
 
-            <label>Monto a Cobrar:</label>
-            <input type="number" step="0.01" name="monto_a_cobrar" class="batch-field" required>
+            <label for="monto_cobrar_inscripcion">Monto a Cobrar:</label>
+            <input type="number" step="0.01" name="monto_a_cobrar" id="monto_cobrar_inscripcion" class="batch-field"
+                   required>
 
-            <label>Método de Pago:</label>
-            <select name="metodo_pago" class="batch-field" required>
+            <label for="metodo_pago_inscripcion">Método de Pago:</label>
+            <select name="metodo_pago" id="metodo_pago_inscripcion" class="batch-field" required>
                 <option value="Efectivo">Efectivo</option>
                 <option value="Transferencia">Transferencia</option>
             </select>
@@ -207,20 +254,9 @@
     </form>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
 <script>
-    // Mostrar campo de texto si se selecciona "Ingresar nuevo equipo"
-    document.getElementById('equipo_id_tarjeta')?.addEventListener('change', function () {
-        const nuevoEquipoInput = document.getElementById('nuevo_equipo_tarjeta');
-        nuevoEquipoInput.style.display = this.value === "" ? "inline" : "none";
-        if (this.value === "") {
-            nuevoEquipoInput.style.display = "inline";
-        } else {
-            nuevoEquipoInput.style.display = "none";
-            nuevoEquipoInput.value = "";  // Limpiar el campo
-        }
-    });
-
-    // Mostrar campo de texto si se selecciona "Ingresar nuevo equipo"
+ // Mostrar campo de texto si se selecciona "Ingresar nuevo equipo"
     document.getElementById('equipo_id_inscripcion')?.addEventListener('change', function () {
         const nuevoEquipoInput = document.getElementById('nuevo_equipo_inscripcion');
         nuevoEquipoInput.style.display = this.value === "" ? "inline" : "none";
@@ -231,33 +267,123 @@
             nuevoEquipoInput.value = "";  // Limpiar el campo
         }
     });
+    document.addEventListener('DOMContentLoaded', () => {
+        // Function to show/hide the new team input
+        const setupNewTeamInput = (selectElement, inputElement) => {
+            selectElement.addEventListener('change', function() {
+                if (this.value === 'new_team') {
+                    anime({
+                        targets: inputElement,
+                        opacity: 1,
+                        height: inputElement.scrollHeight,
+                        duration: 300,
+                        easing: 'easeInOutQuad',
+                        display: 'block'
+                    });
+                } else {
+                    anime({
+                        targets: inputElement,
+                        opacity: 0,
+                        height: 0,
+                        duration: 300,
+                        easing: 'easeInOutQuad',
+                        complete: () => {
+                            inputElement.style.display = 'none';
+                            inputElement.value = '';
+                        }
+                    });
+                }
+            });
+        };
 
-    // Credenciales predefinidas
+        // Initialize for both forms
+        const equipoIdTarjeta = document.getElementById('equipo_id_tarjeta');
+        const nuevoEquipoTarjeta = document.getElementById('nuevo_equipo_tarjeta');
+        setupNewTeamInput(equipoIdTarjeta, nuevoEquipoTarjeta);
+
+        const equipoIdInscripcion = document.getElementById('equipo_id_inscripcion');
+        const nuevoEquipoInscripcion = document.getElementById('nuevo_equipo_inscripcion');
+        setupNewTeamInput(equipoIdInscripcion, nuevoEquipoInscripcion);
+    });
+
+    // Authentication Logic
     const USUARIO_ADMIN = "admin";
     const CONTRASENA_ADMIN = "admin";
 
-    // Verificar si el usuario ya ha iniciado sesión
+    // Add these functions before the window.onload
+    function showLoginPopup() {
+        document.getElementById('login-popup').style.display = 'block';
+        document.getElementById('login-overlay').style.display = 'block';
+        document.getElementById('main-content').style.display = 'none';
+    }
+
+    function showMainContent() {
+        document.getElementById('login-popup').style.display = 'none';
+        document.getElementById('login-overlay').style.display = 'none';
+        document.getElementById('main-content').style.display = 'block';
+    }
+
+    // Modified authentication check on load
     window.onload = function () {
-        const isLoggedIn = localStorage.getItem("isLoggedIn");
+        const isLoggedIn = sessionStorage.getItem("isLoggedIn");
         if (isLoggedIn === "true") {
-            document.getElementById("main-content").style.display = "block";
+            showMainContent();
         } else {
-            document.getElementById("login-popup").style.display = "block";
+            showLoginPopup();
+        }
+
+        // Animate the login popup on load if not logged in
+        if (document.getElementById("login-popup").style.display !== "none") {
+            anime({
+                targets: '#login-popup',
+                translateY: ['-50px', 0],
+                opacity: [0, 1],
+                duration: 800,
+                easing: 'easeOutQuad'
+            });
         }
     };
 
     function validarCredenciales() {
         const usuario = document.getElementById("usuario").value;
         const contrasena = document.getElementById("contrasena").value;
+        const errorMessage = document.getElementById("error-message");
+
         if (usuario === USUARIO_ADMIN && contrasena === CONTRASENA_ADMIN) {
-            localStorage.setItem("isLoggedIn", "true");
-            document.getElementById("login-popup").style.display = "none";
-            document.getElementById("main-content").style.display = "block";
+            // Use sessionStorage instead of localStorage
+            sessionStorage.setItem("isLoggedIn", "true");
+            anime({
+                targets: ['#login-popup', '#login-overlay'],
+                opacity: 0,
+                duration: 300,
+                easing: 'easeOutQuad',
+                complete: function() {
+                    showMainContent();
+                }
+            });
+            errorMessage.style.display = "none";
         } else {
-            document.getElementById("error-message").style.display = "block";
+            anime({
+                targets: errorMessage,
+                opacity: [0, 1],
+                translateY: ['-10px', 0],
+                duration: 500,
+                easing: 'easeOutQuad'
+            });
+            errorMessage.style.display = "block";
         }
     }
 
+    // Remove the window.onbeforeunload handler that was clearing the session
+    // window.onbeforeunload = function () {
+    //     localStorage.removeItem("isLoggedIn");
+    // };
+
+    // Add logout function (optional)
+    function logout() {
+        sessionStorage.removeItem("isLoggedIn");
+        window.location.reload();
+    }
     function agregarJugador(tipo) {
         const container = document.getElementById(`players-container-${tipo}`);
         const jugadorDiv = document.createElement('div');
@@ -374,9 +500,10 @@
         });
     }
 
-    // Limpiar el estado de autenticación cuando se cierra la pestaña
-    window.onbeforeunload = function () {
-        localStorage.removeItem("isLoggedIn");
-    };
 </script>
 {% endblock %}
+
+<!-- Add logout button to your HTML (optional) -->
+<div class="nav-buttons">
+    <button onclick="logout()" style="background-color: #ff4444; float: right;">Cerrar Sesión</button>
+</div>

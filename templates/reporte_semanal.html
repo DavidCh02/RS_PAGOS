@@ -274,18 +274,18 @@
                 {% set same_categoria = pago.categoria == ns.prev_categoria %}
                 {% set equipo_count = pagos.tarjetas|selectattr('nombre_equipo', 'equalto', pago.nombre_equipo)|list|length %}
                 {% set categoria_count = pagos.tarjetas|selectattr('nombre_equipo', 'equalto', pago.nombre_equipo)|selectattr('categoria', 'equalto', pago.categoria)|list|length %}
-                
+
                 <tr class="{{ 'pendiente' if pago.estado_pago != 'Pagado' }}" data-team-color="color{{ loop.index % 4 + 1 }}">
                     {% if not same_equipo %}
                         <td rowspan="{{ equipo_count }}">{{ pago.nombre_equipo or '-' }}</td>
                         {% set ns.prev_equipo = pago.nombre_equipo %}
                     {% endif %}
-                    
+
                     {% if not same_equipo or not same_categoria %}
                         <td rowspan="{{ categoria_count }}">{{ pago.categoria }}</td>
                         {% set ns.prev_categoria = pago.categoria %}
                     {% endif %}
-                    
+
                     <td>{{ pago.jugador }}</td>
                     <td>
                         {% if pago.tarjetas_rojas is defined and pago.tarjetas_amarillas is defined %}
@@ -325,18 +325,18 @@
                 {% set same_categoria = pago.categoria == ns.prev_categoria %}
                 {% set equipo_count = pagos.inscripciones|selectattr('nombre_equipo', 'equalto', pago.nombre_equipo)|list|length %}
                 {% set categoria_count = pagos.inscripciones|selectattr('nombre_equipo', 'equalto', pago.nombre_equipo)|selectattr('categoria', 'equalto', pago.categoria)|list|length %}
-                
+
                 <tr class="{{ 'pendiente' if pago.estado_pago != 'Pagado' }}" data-team-color="color{{ loop.index % 4 + 1 }}">
                     {% if not same_equipo %}
                         <td rowspan="{{ equipo_count }}">{{ pago.nombre_equipo or '-' }}</td>
                         {% set ns.prev_equipo = pago.nombre_equipo %}
                     {% endif %}
-                    
+
                     {% if not same_equipo or not same_categoria %}
                         <td rowspan="{{ categoria_count }}">{{ pago.categoria }}</td>
                         {% set ns.prev_categoria = pago.categoria %}
                     {% endif %}
-                    
+
                     <td>{{ pago.jugador }}</td>
                     <td>${{ pago.monto_a_cobrar }}</td>
                     <td>{{ pago.estado_pago }}</td>

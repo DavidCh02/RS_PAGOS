@@ -1,0 +1,513 @@
+{% block content %}
+<style>
+    /* Reset and base styles */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Montserrat', sans-serif;
+        line-height: 1.6;
+    }
+
+    /* Main container */
+    .landing-container {
+        min-height: 100vh;
+        background: linear-gradient(135deg, rgba(2, 30, 18, 0.9) 0%, rgba(26, 71, 47, 0.9) 100%),
+                    url("{{ url_for('static', filename='images/fondo.jpg') }}");
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        position: relative;
+        overflow: hidden;
+        padding: 3rem 2rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    /* Header section with logo and title */
+    .header-section {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 2rem;
+        max-width: 1200px;
+        width: 100%;
+        margin-bottom: 2rem;
+    }
+
+    /* Enhanced logo container */
+    .logo-container {
+        width: 180px;
+        height: 180px;
+        position: relative;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.15);
+        padding: 0.8rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 235, 59, 0.2);
+        border: 2px solid rgba(255, 235, 59, 0.3);
+    }
+
+    .logo {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        border-radius: 50%;
+        animation: floatAnimation 4s ease-in-out infinite;
+    }
+
+    /* Title container */
+    .title-container {
+        text-align: center;
+        flex: 1;
+        min-width: 280px;
+    }
+
+    .title {
+        font-size: 3.2rem;
+        font-weight: 800;
+        color: #ffeb3b;
+        margin-bottom: 0.5rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+        letter-spacing: 1px;
+        animation: fadeInDown 1s ease-out;
+    }
+
+    .subtitle {
+        font-size: 2.2rem;
+        color: #fff;
+        margin-bottom: 1rem;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        animation: fadeInUp 1s ease-out 0.3s;
+        opacity: 0;
+        animation-fill-mode: forwards;
+        font-weight: 600;
+    }
+
+    /* Venue info with improved styling */
+    .venue {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        margin-top: 2rem;
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        max-width: 500px;
+        text-align: center;
+    }
+
+    .venue h3 {
+        color: #ffeb3b;
+        font-size: 1.4rem;
+        margin-bottom: 0.5rem;
+        animation: fadeInUp 1s ease-out 0.5s;
+        opacity: 0;
+        animation-fill-mode: forwards;
+    }
+
+    .venue p {
+        color: #ffffff;
+        font-size: 1.1rem;
+        margin: 0;
+        animation: fadeInUp 1s ease-out 0.6s;
+        opacity: 0;
+        animation-fill-mode: forwards;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .venue i {
+        color: #ffeb3b;
+    }
+
+    /* Categories section */
+    .categories-section {
+        max-width: 1200px;
+        width: 100%;
+        margin: 3rem auto;
+    }
+
+    .categories {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .category-card {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 2rem;
+        border-radius: 15px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+        animation: fadeIn 1s ease-out 0.6s;
+        opacity: 0;
+        animation-fill-mode: forwards;
+        flex: 1;
+        min-width: 280px;
+        max-width: 350px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .category-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: #ffeb3b;
+        transition: all 0.3s ease;
+    }
+
+    .category-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .category-card:hover::before {
+        width: 8px;
+    }
+
+    .category-icon {
+        font-size: 2.5rem;
+        color: #ffeb3b;
+        margin-bottom: 1rem;
+    }
+
+    .category-title {
+        color: #ffeb3b;
+        font-size: 1.6rem;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        padding-bottom: 0.5rem;
+    }
+
+    .category-details {
+        color: #fff;
+        font-size: 1.1rem;
+    }
+
+    .category-details p {
+        margin-bottom: 0.5rem;
+    }
+
+    /* Call to action button */
+    .cta-container {
+        text-align: center;
+        margin: 2rem 0;
+        position: relative;
+    }
+
+    .cta-button {
+        background: #ffeb3b;
+        color: #111;
+        padding: 1rem 3rem;
+        border-radius: 50px;
+        font-size: 1.5rem;
+        font-weight: bold;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+    }
+
+    .cta-button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: 0.5s;
+    }
+
+    .cta-button:hover {
+        background: #fff;
+        transform: scale(1.05);
+    }
+
+    .cta-button:hover::before {
+        left: 100%;
+    }
+
+    /* Social links with improved styling */
+    .social-links {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        margin-top: 3rem;
+    }
+
+    .social-icon {
+        font-size: 1.8rem;
+        color: #fff;
+        background: rgba(255, 255, 255, 0.1);
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .social-icon:hover {
+        color: #111;
+        background: #ffeb3b;
+        transform: translateY(-5px);
+    }
+
+    /* Footer section */
+    .footer {
+        margin-top: 2rem;
+        text-align: center;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+    }
+
+    /* Countdown timer */
+    .countdown {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin: 2rem 0;
+    }
+
+    .countdown-item {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 1rem;
+        border-radius: 8px;
+        min-width: 80px;
+        text-align: center;
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .countdown-number {
+        font-size: 2rem;
+        color: #ffeb3b;
+        font-weight: bold;
+    }
+
+    .countdown-label {
+        font-size: 0.9rem;
+        color: #fff;
+    }
+
+    /* Enhanced animations */
+    @keyframes floatAnimation {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-15px); }
+    }
+
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeIn {
+        to { opacity: 1; }
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .logo-container {
+            width: 150px;
+            height: 150px;
+        }
+
+        .title {
+            font-size: 2.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.8rem;
+        }
+
+        .category-card {
+            min-width: 250px;
+        }
+
+        .countdown {
+            flex-wrap: wrap;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .landing-container {
+            padding: 2rem 1rem;
+        }
+
+        .title {
+            font-size: 2rem;
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+        }
+
+        .cta-button {
+            padding: 0.8rem 2rem;
+            font-size: 1.3rem;
+        }
+    }
+</style>
+
+<div class="landing-container">
+    <div class="header-section">
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="RS Torneos Deportivos" class="logo">
+        </div>
+        <div class="title-container">
+            <h1 class="title">PRIMER TORNEO</h1>
+            <h2 class="subtitle">DE INTEGRACIÓN DE ABOGADOS DE LOJA</h2>
+        </div>
+    </div>
+
+    <!-- Countdown Timer Section -->
+    <div class="countdown">
+        <div class="countdown-item">
+            <div class="countdown-number" id="days">00</div>
+            <div class="countdown-label">Días</div>
+        </div>
+        <div class="countdown-item">
+            <div class="countdown-number" id="hours">00</div>
+            <div class="countdown-label">Horas</div>
+        </div>
+        <div class="countdown-item">
+            <div class="countdown-number" id="minutes">00</div>
+            <div class="countdown-label">Minutos</div>
+        </div>
+        <div class="countdown-item">
+            <div class="countdown-number" id="seconds">00</div>
+            <div class="countdown-label">Segundos</div>
+        </div>
+    </div>
+
+    <div class="categories-section">
+        <div class="categories">
+            <div class="category-card">
+                <i class="fas fa-futbol category-icon"></i>
+                <h3 class="category-title">CATEGORÍA MASCULINO</h3>
+                <div class="category-details">
+                    <p><i class="fas fa-medal"></i> FÚTBOL SALA Y VÓLEY</p>
+                    <p><i class="fas fa-users"></i> ABIERTA</p>
+                    <p><i class="fas fa-user-shield"></i> +40 AÑOS</p>
+                    <p><i class="fas fa-user-tie"></i> +50 AÑOS</p>
+                </div>
+            </div>
+
+            <div class="category-card">
+                <i class="fas fa-female category-icon"></i>
+                <h3 class="category-title">CATEGORÍA FEMENINO</h3>
+                <div class="category-details">
+                    <p><i class="fas fa-futbol"></i> FÚTBOL SALA</p>
+                    <p><i class="fas fa-users"></i> ABIERTA</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="venue">
+        <h3>CANCHA SINTÉTICA HARTA PELOTA</h3>
+        <p><i class="fas fa-phone-alt"></i> Para mayor información: 099797510</p>
+    </div>
+
+    <div class="cta-container">
+        <a href="/inscripcion" class="cta-button">¡INSCRÍBETE AHORA!</a>
+    </div>
+
+    <div class="social-links">
+        <a href="https://www.instagram.com/rs_torneosdeportivos" class="social-icon"><i class="fab fa-instagram"></i></a>
+        <a href="https://www.facebook.com/profile.php?id=61550867466516" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+        <a href="#" class="social-icon"><i class="fab fa-whatsapp"></i></a>
+        <a href="#" class="social-icon"><i class="fab fa-tiktok"></i></a>
+    </div>
+
+    <div class="footer">
+        <p>© 2025 RS Torneos Deportivos - Todos los derechos reservados</p>
+    </div>
+</div>
+
+<!-- Font imports -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<!-- Countdown Timer Script -->
+<script>
+    // Set the date for the tournament (example date - change to actual date)
+    const countdownDate = new Date("June 15, 2025 09:00:00").getTime();
+
+    // Update the countdown every 1 second
+    const countdown = setInterval(function() {
+        // Get today's date and time
+        const now = new Date().getTime();
+
+        // Find the distance between now and the countdown date
+        const distance = countdownDate - now;
+
+        // Time calculations for days, hours, minutes and seconds
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        // Display the result
+        document.getElementById("days").textContent = String(days).padStart(2, "0");
+        document.getElementById("hours").textContent = String(hours).padStart(2, "0");
+        document.getElementById("minutes").textContent = String(minutes).padStart(2, "0");
+        document.getElementById("seconds").textContent = String(seconds).padStart(2, "0");
+
+        // If the countdown is finished, display some text
+        if (distance < 0) {
+            clearInterval(countdown);
+            document.getElementById("days").textContent = "00";
+            document.getElementById("hours").textContent = "00";
+            document.getElementById("minutes").textContent = "00";
+            document.getElementById("seconds").textContent = "00";
+        }
+    }, 1000);
+</script>
+{% endblock %}
