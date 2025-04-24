@@ -1,23 +1,16 @@
-from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for, flash
-from sqlalchemy import create_engine, text
-from flask import Flask, request, jsonify
+# app.py
+from flask import Flask, jsonify
+from inscripciones import inscripciones_bp  # Importa el Blueprint
+from database import get_db_connection  # Importa desde database.py
 
-# Crear la aplicación Flask
 app = Flask(__name__)
-app.secret_key = "supersecretkey"  # Clave secreta para usar flash()
+app.secret_key = "supersecretkey"
 
-if __name__ == '__main__':
-    app.run(debug=True)
+# Registra el Blueprint
+app.register_blueprint(inscripciones_bp)
 
-# Configuración de la base de datos
-DATABASE_URL = "postgresql+pg8000://rs_pagos_user:XnBxCpRwG7C4Cb6jKIzZ2Wta3NJoOdfI@dpg-cvrlids9c44c73d6113g-a.oregon-postgres.render.com/rs_pagos"
-engine = create_engine(DATABASE_URL)
+# Ruta principal
 
-
-# Función auxiliar para obtener una conexión a la base de datos
-def get_db_connection():
-    return engine.connect()
 
 
 from datetime import datetime
@@ -32,7 +25,12 @@ today_utc = datetime.now(timezone).strftime('%Y-%m-%d')  # Fecha actual en UTC
 @app.route('/landing')
 def landing():
     return render_template('landing.html')
-
+@app.route('/inscripcion')
+def inscripcion():
+    return render_template('inscripciones.html')
+@app.route('/admin_inscripcion')
+def admin_inscripcion():
+    return render_template('admin_inscripcion.html')
 
 # ... rest of your routes ...
 # Ruta para procesar envíos por lotes
@@ -1011,3 +1009,4 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 def allowed_file(filename):
     return '.' in filename and \
         filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
