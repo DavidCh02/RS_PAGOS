@@ -28,6 +28,10 @@ def landing():
 @app.route('/inscripcion')
 def inscripcion():
     return render_template('inscripciones.html')
+
+@app.route('/gracias-inscripcion')
+def gracias_inscripcion():
+    return render_template('gracias_inscripcion.html')
 @app.route('/admin_inscripcion')
 def admin_inscripcion():
     return render_template('admin_inscripcion.html')

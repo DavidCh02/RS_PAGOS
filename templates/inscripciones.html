@@ -1,5 +1,7 @@
+{% extends "base_usuario.html" %}
 {% block content %}
 <style>
+    /* Variables de color */
     :root {
         --primary: #ffcc00;
         --primary-light: #ffdd33;
@@ -11,150 +13,198 @@
         --danger: #ff3d00;
     }
 
+    /* Estilos generales */
     body {
         background-color: var(--dark);
         color: var(--text);
         font-family: 'Roboto', sans-serif;
+        margin: 0;
+        padding: 0;
+        line-height: 1.6;
+        font-size: 16px;
+        overflow-x: hidden; /* Prevent horizontal scrolling */
     }
 
+    /* Contenedor principal */
     .inscription-container {
         max-width: 900px;
-        margin: 30px auto;
-        padding: 30px;
+        margin: 20px auto;
+        padding: 20px;
         background: linear-gradient(145deg, var(--dark), var(--dark-light));
-        border-radius: 20px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        border-radius: 10px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
         animation: fadeIn 0.6s ease-out;
+        box-sizing: border-box;
     }
 
+    /* Animación fadeIn */
     @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+            opacity: 0;
+            transform: translateY(5px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
+    /* Sección del formulario */
     .form-section {
         background: rgba(255, 255, 255, 0.05);
-        padding: 25px;
-        border-radius: 15px;
-        margin-bottom: 25px;
-        border-left: 4px solid var(--primary);
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border-left: 3px solid var(--primary);
         transition: all 0.3s ease;
         animation: slideIn 0.5s ease-out;
     }
 
+    /* Animación slideIn */
     @keyframes slideIn {
-        from { opacity: 0; transform: translateX(-20px); }
-        to { opacity: 1; transform: translateX(0); }
+        from {
+            opacity: 0;
+            transform: translateX(-5px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
     }
 
+    /* Efecto hover en la sección del formulario */
     .form-section:hover {
-        box-shadow: 0 5px 15px rgba(255, 204, 0, 0.2);
-        transform: translateY(-3px);
+        box-shadow: 0 2px 6px rgba(255, 204, 0, 0.2);
+        transform: translateY(-1px);
     }
 
-    h2, h3 {
+    /* Títulos */
+    h2,
+    h3 {
         color: var(--primary);
-        margin-bottom: 20px;
+        margin-bottom: 15px;
         position: relative;
         font-weight: 600;
+        font-size: 2.2em;
     }
 
+    h3 {
+        font-size: 1.7em;
+    }
+
+    /* Línea bajo el título */
     h2::after {
         content: '';
         position: absolute;
-        bottom: -8px;
+        bottom: -4px;
         left: 0;
-        width: 60px;
-        height: 4px;
+        width: 30px;
+        height: 3px;
         background: var(--primary);
         border-radius: 2px;
     }
 
+    /* Etiquetas */
     label {
         display: block;
-        margin: 15px 0 8px;
+        margin: 10px 0 5px;
         font-weight: 500;
         color: var(--primary-light);
+        font-size: 1.3em;
     }
 
+    /* Campos de entrada */
     input[type="text"],
     input[type="tel"],
     input[type="email"],
     input[type="number"],
     select {
         width: 100%;
-        padding: 12px 15px;
+        padding: 14px;
         background: rgba(255, 255, 255, 0.1);
         border: 1px solid rgba(255, 204, 0, 0.3);
-        border-radius: 8px;
+        border-radius: 5px;
         color: var(--text);
-        font-size: 16px;
+        font-size: 1.2em;
         transition: all 0.3s;
         margin-bottom: 15px;
         -webkit-appearance: none;
         -moz-appearance: none;
         appearance: none;
-        cursor: pointer;
+        box-sizing: border-box;
     }
 
-    /* Add these new styles */
+    /* Estilos adicionales para el select */
     select {
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ffcc00' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
         background-repeat: no-repeat;
-        background-position: right 15px center;
+        background-position: right 10px center;
         background-size: 16px;
-        padding-right: 45px;
+        padding-right: 40px;
     }
 
+    /* Estilos para las opciones del select */
     select option {
         background-color: var(--dark);
         color: var(--text);
         padding: 12px;
     }
 
+    /* Estilos para el select cuando está enfocado */
     select:focus {
         outline: none;
         border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.2);
+        box-shadow: 0 0 0 2px rgba(255, 204, 0, 0.2);
     }
 
+    /* Estilos para el select cuando se hace hover */
     select:hover {
         background-color: rgba(255, 255, 255, 0.15);
     }
 
-    input:focus, select:focus {
+    /* Estilos para los campos de entrada cuando están enfocados */
+    input:focus,
+    select:focus {
         outline: none;
         border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.2);
+        box-shadow: 0 0 0 2px rgba(255, 204, 0, 0.2);
     }
 
+    /* Botones */
     button {
         background: var(--primary);
         color: var(--dark);
         border: none;
-        padding: 12px 24px;
-        border-radius: 8px;
+        padding: 14px 28px;
+        border-radius: 5px;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.3s;
-        margin-top: 10px;
-        font-size: 16px;
+        margin-top: 15px;
+        font-size: 1.4em;
         text-transform: uppercase;
         letter-spacing: 1px;
         position: relative;
         overflow: hidden;
+        width: 100%;
+        box-sizing: border-box;
     }
 
+    /* Efecto hover en los botones */
     button:hover {
         background: var(--primary-light);
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(255, 204, 0, 0.3);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 6px rgba(255, 204, 0, 0.3);
     }
 
+    /* Efecto activo en los botones */
     button:active {
         transform: translateY(0);
     }
 
+    /* Efecto ripple en los botones */
     button::after {
         content: '';
         position: absolute;
@@ -169,6 +219,7 @@
         transform-origin: 50% 50%;
     }
 
+    /* Animación ripple */
     button:focus:not(:active)::after {
         animation: ripple 1s ease-out;
     }
@@ -178,24 +229,28 @@
             transform: scale(0, 0);
             opacity: 1;
         }
+
         20% {
             transform: scale(25, 25);
             opacity: 0.8;
         }
+
         100% {
             opacity: 0;
             transform: scale(50, 50);
         }
     }
 
+    /* Contenedor de jugadores */
     .players-container {
-        max-height: 500px;
+        max-height: 400px;
         overflow-y: auto;
         padding: 15px;
         scrollbar-width: thin;
         scrollbar-color: var(--primary) var(--dark);
     }
 
+    /* Estilos para la barra de desplazamiento */
     .players-container::-webkit-scrollbar {
         width: 8px;
     }
@@ -210,108 +265,135 @@
         border-radius: 10px;
     }
 
+    /* Tarjeta de jugador */
     .player-card {
         background: rgba(255, 255, 255, 0.05);
-        padding: 20px;
+        padding: 14px;
         margin-bottom: 15px;
-        border-radius: 12px;
+        border-radius: 7px;
         border: 1px solid rgba(255, 204, 0, 0.3);
         transition: all 0.3s;
         animation: fadeIn 0.5s ease-out;
         position: relative;
     }
 
+    /* Efecto hover en la tarjeta de jugador */
     .player-card:hover {
         background: rgba(255, 255, 255, 0.08);
-        transform: translateX(3px);
+        transform: translateX(1px);
     }
 
+    /* Título de la tarjeta de jugador */
     .player-card h4 {
         color: var(--primary);
         margin-top: 0;
-        margin-bottom: 15px;
+        margin-bottom: 8px;
         display: flex;
         align-items: center;
+        font-size: 1.4em;
     }
 
+    /* Icono antes del título de la tarjeta de jugador */
     .player-card h4::before {
         content: '🏃';
-        margin-right: 10px;
+        margin-right: 8px;
+        font-size: 1.2em;
     }
 
+    /* Botón de la tarjeta de jugador */
     .player-card button {
         background: var(--danger);
-        padding: 8px 15px;
-        font-size: 14px;
+        padding: 10px 18px;
+        font-size: 1.1em;
         position: absolute;
-        top: 15px;
-        right: 15px;
+        top: 8px;
+        right: 8px;
+        width: auto;
+        box-sizing: border-box;
     }
 
+    /* Resumen de costos */
     .cost-summary {
         background: linear-gradient(135deg, rgba(255, 204, 0, 0.1), rgba(255, 204, 0, 0.15));
-        padding: 25px;
-        border-radius: 15px;
-        margin-top: 30px;
+        padding: 18px;
+        border-radius: 8px;
+        margin-top: 20px;
         animation: pulseGlow 3s infinite alternate;
         border: 1px solid rgba(255, 204, 0, 0.3);
     }
 
+    /* Animación pulseGlow */
     @keyframes pulseGlow {
-        from { box-shadow: 0 0 10px rgba(255, 204, 0, 0.2); }
-        to { box-shadow: 0 0 20px rgba(255, 204, 0, 0.4); }
+        from {
+            box-shadow: 0 0 6px rgba(255, 204, 0, 0.2);
+        }
+
+        to {
+            box-shadow: 0 0 12px rgba(255, 204, 0, 0.4);
+        }
     }
 
+    /* Párrafos del resumen de costos */
     .cost-summary p {
         display: flex;
         justify-content: space-between;
-        margin: 8px 0;
-        font-size: 16px;
+        margin: 7px 0;
+        font-size: 1.1em;
     }
 
+    /* Span del resumen de costos */
     .cost-summary p span {
         font-weight: 600;
         color: var(--primary);
     }
 
+    /* Último párrafo del resumen de costos */
     .cost-summary p:last-child {
-        margin-top: 15px;
-        padding-top: 15px;
+        margin-top: 10px;
+        padding-top: 10px;
         border-top: 1px solid rgba(255, 204, 0, 0.3);
-        font-size: 20px;
+        font-size: 1.4em;
         font-weight: 700;
     }
 
+    /* Área de carga de archivos */
     .file-upload {
         border: 2px dashed var(--primary);
-        padding: 30px;
+        padding: 20px;
         text-align: center;
-        border-radius: 15px;
-        margin: 30px 0;
+        border-radius: 8px;
+        margin: 20px 0;
         transition: all 0.3s;
         background: rgba(255, 204, 0, 0.05);
         position: relative;
     }
 
+    /* Efecto hover en el área de carga de archivos */
     .file-upload:hover {
         background: rgba(255, 204, 0, 0.08);
         transform: scale(1.01);
     }
 
+    /* Párrafos del área de carga de archivos */
     .file-upload p {
-        margin-bottom: 20px;
+        margin-bottom: 15px;
         color: var(--text);
+        font-size: 1.2em;
     }
 
-    .file-upload input[type="file"] {
-        position: relative;
+    /* Input de carga de archivos */
+   .file-upload input[type="file"] {
+        position: absolute;
         z-index: 2;
         opacity: 0;
         width: 100%;
-        height: 100px;
+        height: 100%;
         cursor: pointer;
+        top: 0;
+        left: 0;
     }
 
+    /* Label del área de carga de archivos */
     .file-upload label {
         position: absolute;
         top: 50%;
@@ -323,25 +405,31 @@
         pointer-events: none;
     }
 
+    /* Texto del área de carga de archivos */
     .file-upload-text {
         color: var(--primary);
         font-weight: 600;
         display: block;
-        margin-top: 10px;
+        margin-top: 8px;
+        font-size: 1.2em;
+        word-break: break-word; /* Make the file name wrap */
     }
 
+    /* Clase hidden */
     .hidden {
         display: none;
     }
 
+    /* Grupo de checkbox */
     .checkbox-group {
         display: flex;
         align-items: center;
-        margin: 15px 0;
+        margin: 10px 0;
     }
 
+    /* Input checkbox */
     .checkbox-group input[type="checkbox"] {
-        margin-right: 10px;
+        margin-right: 8px;
         width: 20px;
         height: 20px;
         accent-color: var(--primary);
@@ -362,42 +450,121 @@
 
     .modal-content {
         background: linear-gradient(145deg, var(--dark), var(--dark-light));
-        margin: 15% auto;
-        padding: 30px;
+        margin: 40% auto;
+        padding: 20px;
         border: 2px solid var(--primary);
-        border-radius: 15px;
+        border-radius: 10px;
         width: 80%;
-        max-width: 500px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        max-width: 400px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
         animation: scaleIn 0.4s ease-out;
         text-align: center;
     }
 
     @keyframes scaleIn {
-        from { transform: scale(0.8); opacity: 0; }
-        to { transform: scale(1); opacity: 1; }
+        from {
+            transform: scale(0.8);
+            opacity: 0;
+        }
+
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
     }
 
     .success-icon {
-        font-size: 70px;
+        font-size: 50px;
         color: var(--success);
-        margin-bottom: 20px;
+        margin-bottom: 15px;
         display: block;
     }
 
     .modal h3 {
         margin-top: 0;
         color: var(--primary);
+        font-size: 1.5em;
     }
 
     .modal p {
-        margin: 20px 0;
-        line-height: 1.6;
+        margin: 15px 0;
+        line-height: 1.4;
+        font-size: 1.2em;
     }
 
     .modal button {
-        padding: 12px 40px;
-        margin-top: 20px;
+        padding: 14px 30px;
+        margin-top: 15px;
+    }
+
+    /* Responsive styles */
+    @media (max-width: 768px) {
+        .inscription-container {
+            width: 105%;
+            padding: 10px;
+            margin: 20px auto;
+
+        }
+
+        .form-section {
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        h2, h3 {
+            font-size: 1.8em;
+        }
+
+        label {
+            font-size: 1.1em;
+        }
+
+        input[type="text"],
+        input[type="tel"],
+        input[type="email"],
+        input[type="number"],
+        select,
+        button {
+            font-size: 1em;
+            padding: 12px;
+        }
+
+        .players-container {
+            padding: 5px;
+            max-height: 400px;
+        }
+
+        .player-card {
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .player-card h4 {
+            font-size: 1.2em;
+        }
+
+        .cost-summary {
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .file-upload {
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .file-upload-text {
+            font-size: 1em;
+        }
+    }
+
+    @media (max-width: 576px) {
+        h2, h3 {
+            font-size: 1.5em;
+        }
+
+        button {
+            font-size: 1.2em;
+        }
     }
 </style>
 
@@ -470,13 +637,12 @@
         </div>
 
         <div class="file-upload">
-            <h3>Comprobante de Pago</h3>
-            <p>Por favor, suba una imagen del comprobante de pago</p>
-            <p>Asegurese de revisarla y enviar la correcta</p>
+            <h3>Comprobante de Pago (captura de pantalla)</h3>
+
 
             <input type="file" id="comprobantePago" name="comprobantePago" accept="image/*" required>
-            <label>
-                <span class="file-upload-text">Arrastra tu archivo aquí o haz clic para seleccionar</span>
+            <p class="file-upload-text">Ningún archivo seleccionado</p>
+            <label for="comprobantePago">
             </label>
         </div>
 
@@ -495,173 +661,178 @@
 </div>
 
 <script>
-const deportes = {
-    masculina: ['Fútbol Sala', 'Vóley'],
-    femenina: ['Fútbol Sala']
-};
+    const deportes = {
+        masculina: ['Fútbol Sala', 'Vóley'],
+        femenina: ['Fútbol Sala']
+    };
 
-const subcategorias = {
-    masculina: ['Abierta', '+40', '+50'],
-    femenina: ['Abierta']
-};
+    const subcategorias = {
+        masculina: ['Abierta', '+40', '+50'],
+        femenina: ['Abierta']
+    };
 
-document.getElementById('categoria').addEventListener('change', function() {
-    const deporteContainer = document.getElementById('deporteContainer');
-    const deporteSelect = document.getElementById('deporte');
-    const subcategoriaContainer = document.getElementById('subcategoriaContainer');
-    const subcategoriaSelect = document.getElementById('subcategoria');
+    document.getElementById('categoria').addEventListener('change', function() {
+        const deporteContainer = document.getElementById('deporteContainer');
+        const deporteSelect = document.getElementById('deporte');
+        const subcategoriaContainer = document.getElementById('subcategoriaContainer');
+        const subcategoriaSelect = document.getElementById('subcategoria');
 
-    deporteSelect.innerHTML = '<option value="">Seleccione un deporte</option>';
-    subcategoriaSelect.innerHTML = '<option value="">Seleccione una subcategoría</option>';
+        deporteSelect.innerHTML = '<option value="">Seleccione un deporte</option>';
+        subcategoriaSelect.innerHTML = '<option value="">Seleccione una subcategoría</option>';
 
-    if (this.value) {
-        deporteContainer.classList.remove('hidden');
-        subcategoriaContainer.classList.remove('hidden');
+        if (this.value) {
+            deporteContainer.classList.remove('hidden');
+            subcategoriaContainer.classList.remove('hidden');
 
-        deportes[this.value].forEach(deporte => {
-            const option = document.createElement('option');
-            option.value = deporte.toLowerCase();
-            option.textContent = deporte;
-            deporteSelect.appendChild(option);
-        });
-
-        subcategorias[this.value].forEach(subcategoria => {
-            const option = document.createElement('option');
-            option.value = subcategoria.toLowerCase();
-            option.textContent = subcategoria;
-            subcategoriaSelect.appendChild(option);
-        });
-    } else {
-        deporteContainer.classList.add('hidden');
-        subcategoriaContainer.classList.add('hidden');
-    }
-});
-
-function addPlayer() {
-    const container = document.getElementById('playersContainer');
-    const playerCount = container.children.length;
-
-    if (playerCount >= 30) {
-        alert('Se ha alcanzado el límite máximo de jugadores (30)');
-        return;
-    }
-
-    const playerCard = document.createElement('div');
-    playerCard.className = 'player-card';
-    playerCard.innerHTML = `
-        <h4>Jugador ${playerCount + 1}</h4>
-        <input type="text" name="jugador[${playerCount}][nombre]" placeholder="Nombre completo" required>
-        <input type="text" name="jugador[${playerCount}][cedula]" placeholder="Número de cédula" required>
-        <input type="number" name="jugador[${playerCount}][numeroCamiseta]" placeholder="Número de camiseta" required>
-        <button type="button" onclick="this.parentElement.remove(); updateCosts();">Eliminar</button>
-    `;
-
-    container.appendChild(playerCard);
-    updateCosts();
-}
-
-function updateCosts() {
-    const playerCount = document.getElementById('playersContainer').children.length;
-    const extraPlayers = Math.max(0, playerCount - 10); // Changed from 20 to 10
-    const extraCost = extraPlayers * 12; // Changed from 10 to 12
-    const totalCost = 120 + extraCost; // Changed from 100 to 120
-
-    document.getElementById('totalPlayers').textContent = playerCount;
-    document.getElementById('extraCost').textContent = extraCost.toFixed(2);
-    document.getElementById('totalCost').textContent = totalCost.toFixed(2);
-}
-
-// Mostrar el modal de confirmación
-function showConfirmationModal() {
-    const modal = document.getElementById('confirmationModal');
-    modal.style.display = 'block';
-}
-
-// Ocultar el modal de confirmación
-document.getElementById('confirmButton').addEventListener('click', function() {
-    const modal = document.getElementById('confirmationModal');
-    modal.style.display = 'none';
-    window.location.href = '/inscripciones';
-});
-
-document.getElementById('addPlayer').addEventListener('click', addPlayer);
-
-// Actualizar la etiqueta del input file cuando se selecciona un archivo
-document.getElementById('comprobantePago').addEventListener('change', function() {
-    const fileName = this.files[0]?.name || "Ningún archivo seleccionado";
-    const fileUploadText = this.parentElement.querySelector('.file-upload-text');
-    fileUploadText.textContent = fileName;
-});
-
-document.getElementById('inscriptionForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-
-    const playerCount = document.getElementById('playersContainer').children.length;
-    if (playerCount < 10) {
-        alert('Debe registrar al menos 10 jugadores para completar la inscripción.');
-        return;
-    }
-
-    try {
-        const formData = new FormData();
-
-        // Add form fields with correct names
-        formData.append('categoria', document.getElementById('categoria').value);
-        formData.append('deporte', document.getElementById('deporte').value);
-        formData.append('subcategoria', document.getElementById('subcategoria').value);
-        formData.append('nombreEquipo', document.getElementById('nombreEquipo').value);  // Add this line
-        formData.append('nombreDirigente', document.getElementById('nombreDirigente').value);
-        formData.append('telefonoDirigente', document.getElementById('telefonoDirigente').value);
-        formData.append('emailDirigente', document.getElementById('emailDirigente').value);
-        formData.append('dirigenteJugador', document.getElementById('dirigenteJugador').checked);
-
-        // Add calculated values
-        // Update the cost calculations
-        formData.append('total_jugadores', playerCount);
-        formData.append('monto_base', 120.0);
-        formData.append('monto_extra', Math.max(0, playerCount - 10) * 12);
-        formData.append('monto_total', 120.0 + Math.max(0, playerCount - 10) * 12);
-
-        // Add file
-        const fileInput = document.getElementById('comprobantePago');
-        if (fileInput.files[0]) {
-            formData.append('comprobantePago', fileInput.files[0]);
-        }
-
-        // Add players data
-        const players = [];
-        document.querySelectorAll('.player-card').forEach((card) => {
-            players.push({
-                nombre: card.querySelector('input[name$="[nombre]"]').value,
-                cedula: card.querySelector('input[name$="[cedula]"]').value,
-                numero_camiseta: card.querySelector('input[name$="[numeroCamiseta]"]').value
+            deportes[this.value].forEach(deporte => {
+                const option = document.createElement('option');
+                option.value = deporte.toLowerCase();
+                option.textContent = deporte;
+                deporteSelect.appendChild(option);
             });
-        });
-        formData.append('jugadores', JSON.stringify(players));
 
-        // Send form data to server
-        const response = await fetch('/inscripcion/guardar', {
-            method: 'POST',
-            body: formData
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-        }
-
-        const result = await response.json();
-
-        if (result.success) {
-            // Mostrar el modal de confirmación en lugar de la alerta
-            showConfirmationModal();
+            subcategorias[this.value].forEach(subcategoria => {
+                const option = document.createElement('option');
+                option.value = subcategoria.toLowerCase();
+                option.textContent = subcategoria;
+                subcategoriaSelect.appendChild(option);
+            });
         } else {
-            alert('Error al registrar la inscripción: ' + result.message);
+            deporteContainer.classList.add('hidden');
+            subcategoriaContainer.classList.add('hidden');
         }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Error al procesar la inscripción: ' + error.message);
+    });
+
+    function addPlayer() {
+        const container = document.getElementById('playersContainer');
+        const playerCount = container.children.length;
+
+        if (playerCount >= 30) {
+            alert('Se ha alcanzado el límite máximo de jugadores (30)');
+            return;
+        }
+
+        const playerCard = document.createElement('div');
+        playerCard.className = 'player-card';
+        playerCard.innerHTML = `
+            <h4>Jugador ${playerCount + 1}</h4>
+            <input type="text" name="jugador[${playerCount}][nombre]" placeholder="Nombre completo" required>
+            <input type="text" name="jugador[${playerCount}][cedula]" placeholder="Número de cédula" required>
+            <input type="number" name="jugador[${playerCount}][numeroCamiseta]" placeholder="Número de camiseta" required>
+            <button type="button" onclick="removePlayer(this)">Eliminar</button>
+        `;
+
+        container.appendChild(playerCard);
+        updateCosts();
     }
-});
+
+    function removePlayer(element) {
+        element.parentElement.remove();
+        updateCosts();
+    }
+
+    function updateCosts() {
+        const playerCount = document.getElementById('playersContainer').children.length;
+        const extraPlayers = Math.max(0, playerCount - 10);
+        const extraCost = extraPlayers * 12;
+        const totalCost = 120 + extraCost;
+
+        document.getElementById('totalPlayers').textContent = playerCount;
+        document.getElementById('extraCost').textContent = extraCost.toFixed(2);
+        document.getElementById('totalCost').textContent = totalCost.toFixed(2);
+    }
+
+
+    // Mostrar el modal de confirmación
+    function showConfirmationModal() {
+        const modal = document.getElementById('confirmationModal');
+        modal.style.display = 'block';
+    }
+
+    // Ocultar el modal de confirmación
+    document.getElementById('confirmButton').addEventListener('click', function() {
+        const modal = document.getElementById('confirmationModal');
+        modal.style.display = 'none';
+        window.location.href = '/gracias-inscripcion';  // Update this line
+    });
+
+    document.getElementById('addPlayer').addEventListener('click', addPlayer);
+
+    // Actualizar la etiqueta del input file cuando se selecciona un archivo
+   document.getElementById('comprobantePago').addEventListener('change', function() {
+        const fileName = this.files[0]?.name || "Ningún archivo seleccionado";
+        const fileUploadText = this.parentElement.querySelector('.file-upload-text');
+        fileUploadText.textContent = fileName;
+    });
+
+   document.getElementById('inscriptionForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const playerCount = document.getElementById('playersContainer').children.length;
+        if (playerCount < 1) {
+            alert('Debe registrar al menos 10 jugadores para completar la inscripción.');
+            return;
+        }
+
+        try {
+            const formData = new FormData();
+
+            // Add form fields with correct names
+            formData.append('categoria', document.getElementById('categoria').value);
+            formData.append('deporte', document.getElementById('deporte').value);
+            formData.append('subcategoria', document.getElementById('subcategoria').value);
+            formData.append('nombreEquipo', document.getElementById('nombreEquipo').value);
+            formData.append('nombreDirigente', document.getElementById('nombreDirigente').value);
+            formData.append('telefonoDirigente', document.getElementById('telefonoDirigente').value);
+            formData.append('emailDirigente', document.getElementById('emailDirigente').value);
+            formData.append('dirigenteJugador', document.getElementById('dirigenteJugador').checked);
+
+            // Add calculated values
+            formData.append('total_jugadores', playerCount);
+            formData.append('monto_base', 120.0);
+            formData.append('monto_extra', Math.max(0, playerCount - 10) * 12);
+            formData.append('monto_total', 120.0 + Math.max(0, playerCount - 10) * 12);
+
+            // Add file
+            const fileInput = document.getElementById('comprobantePago');
+            if (fileInput.files[0]) {
+                formData.append('comprobantePago', fileInput.files[0]);
+            }
+
+            // Add players data
+            const players = [];
+            document.querySelectorAll('.player-card').forEach((card) => {
+                players.push({
+                    nombre: card.querySelector('input[name$="[nombre]"]').value,
+                    cedula: card.querySelector('input[name$="[cedula]"]').value,
+                    numero_camiseta: card.querySelector('input[name$="[numeroCamiseta]"]').value
+                });
+            });
+            formData.append('jugadores', JSON.stringify(players));
+
+            // Send form data to server
+            const response = await fetch('/inscripcion/guardar', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+            }
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Mostrar el modal de confirmación en lugar de la alerta
+                showConfirmationModal();
+            } else {
+                alert('Error al registrar la inscripción: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error al procesar la inscripción: ' + error.message);
+        }
+    });
 </script>
 {% endblock %}

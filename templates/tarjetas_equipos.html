@@ -1,13 +1,8 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Pago de Tarjetas</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+{% extends "base_usuario.html" %}
+{% block content %}
     <style>
         :root {
-            --primary-color: #ffea00;
+            --primary-color: #ffd90d;
             --secondary-color: #000000;
             --accent-color: #ffd700;
             --text-light: #ffffff;
@@ -153,13 +148,10 @@
             }
         }
     </style>
-</head>
+
 <body>
     <!-- Add header section with logo -->
     <div class="header-section">
-        <div class="logo-container">
-            <img src="https://png.pngtree.com/png-clipart/20240312/original/pngtree-illustration-of-golden-soccer-symbol-it-s-winner-concept-png-image_14575046.png" alt="Logo Balón de Oro">
-        </div>
         <h1 class="page-title">Sistema de Pagos de Tarjetas</h1>
     </div>
 
@@ -403,5 +395,4 @@ $(document).on('change', '.jugador-checkbox', function() {
     $('#jugadoresSeleccionados').val(JSON.stringify(selectedJugadores));
 });
 </script>
-</body>
-</html>
+{% endblock %}
