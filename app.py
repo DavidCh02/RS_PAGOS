@@ -1,46 +1,26 @@
-import os
-from flask import Flask, jsonify, render_template, request, redirect, url_for
+from flask import Flask, jsonify, request, redirect, url_for, render_template
 from sqlalchemy import text
-from datetime import datetime, timedelta
-import pytz
-
-# 1. IMPORTANTE: Importamos 'db' y TODOS los modelos desde models.py
-# Esto permite que SQLAlchemy sepa qué tablas crear.
-from models import db, Inscripcion, JugadorInscrito, EquipoPagos, PagoTarjetas, PagoInscripcion
-from database import get_db_connection  # Mantenemos tu conexión antigua para que las rutas sigan funcionando
-from inscripciones import inscripciones_bp
+from inscripciones import inscripciones_bp  # Importa el Blueprint
+from database import get_db_connection  # Importa desde database.py
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
-# --- CONFIGURACIÓN DE LA BASE DE DATOS ---
-# Usamos la variable de entorno de Render o tu URL local
-database_url = os.environ.get('DATABASE_URL', "postgresql+pg8000://rstorneos_user:6GWHEnUrLsGv7APN0xr7LQ6clLhr3nwy@dpg-d4ii9ik9c44c73asqqcg-a/rstorneos")
-
-# Parche para compatibilidad en Render (postgres:// -> postgresql://)
-if database_url and database_url.startswith("postgres://"):
-    database_url = database_url.replace("postgres://", "postgresql://", 1)
-
-app.config['SQLALCHEMY_DATABASE_URI'] = database_url
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# 2. INICIALIZAR LA BASE DE DATOS CON LA APP
-db.init_app(app)
-
-# 3. CREACIÓN AUTOMÁTICA DE TABLAS
-# Esto se ejecutará cada vez que inicies la aplicación.
-# Si las tablas ya existen, no hace nada. Si faltan, las crea.
-with app.app_context():
-    try:
-        db.create_all()
-        print("✅ BASE DE DATOS: Tablas verificadas y creadas correctamente.")
-    except Exception as e:
-        print(f"❌ ERROR BASE DE DATOS: No se pudieron crear las tablas. Detalle: {e}")
-
-# Registrar el Blueprint
+# Registra el Blueprint
 app.register_blueprint(inscripciones_bp)
 
-# --- A PARTIR DE AQUÍ TUS RUTAS (NO BORRAR LO DE ABAJO) ---
+# Ruta principal
+
+
+
+from datetime import datetime
+import pytz
+
+# Obtener la fecha actual en UTC
+timezone = pytz.timezone('UTC')
+today_utc = datetime.now(timezone).strftime('%Y-%m-%d')  # Fecha actual en UTC
+
+# ... existing imports ...
 
 @app.route('/landing')
 def landing():
@@ -2024,5 +2004,6 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 def allowed_file(filename):
     return '.' in filename and \
         filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 
